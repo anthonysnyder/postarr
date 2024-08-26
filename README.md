@@ -31,7 +31,7 @@ version: '3.8'
 
 services:
   posterr:
-    image: your-dockerhub-username/posterr:latest
+    image: swguru2004/posterr:latest
     container_name: posterr
     environment:
       - TMDB_API_KEY=your_tmdb_api_key
