@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Movie Collection</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .movie-grid {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .movie-card {
+            flex: 0 0 16.66%;
+            max-width: 16.66%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .movie-card img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 8px;
+            max-height: 300px;
+        }
+        .movie-card h5 {
+            font-size: 1rem;
+            margin-top: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="my-4">My Movie Collection</h1>
+    
+    <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
+    <button class="btn btn-primary mt-2" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
+    <button class="btn btn-secondary mt-2" onclick="showAllMovies()">Show All</button>
+
+    <div id="movieList" class="movie-grid">
+        {% for movie in movies %}
+        <div class="movie-card" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
+            <div>
+                {% if movie.poster %}
+                <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
+                {% else %}
+                <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                    <span>No Poster</span>
+                </div>
+                {% endif %}
+            </div>
+            <h5 class="mt-2" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    console.log("Script tag reached");
+
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.log("Error occurred: " + message);
+        return true;
+    };
+
+    function triggerSearch(title) {
+        console.log("Clicked on:", title);
+        try {
+            // Remove the year from the title and trim any leading/trailing whitespace
+            const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
+            console.log(`Cleaned title: ${cleanTitle}`);
+            // Initiate the search by redirecting to the search route with the cleaned title
+            window.location.href = `/search?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+        } catch (error) {
+            console.error('Error in triggerSearch:', error);
+        }
+    }
+
+    function showMoviesWithoutPoster() {
+        console.log('Showing movies without posters.');
+        const movies = document.querySelectorAll('#movieList .movie-card');
+        movies.forEach(function(movie) {
+            const hasPoster = movie.getAttribute('data-has-poster');
+            if (hasPoster === "true") {
+                movie.style.display = 'none';
+            } else {
+                movie.style.display = 'block';
+            }
+        });
+    }
+
+    function showAllMovies() {
+        console.log('Showing all movies.');
+        window.location.href = `/`;
+    }
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const movies = document.querySelectorAll('#movieList .movie-card');
+
+        movies.forEach(function(movie) {
+            const title = movie.getAttribute('data-title');
+            if (title.includes(query)) {
+                movie.style.display = 'block';
+            } else {
+                movie.style.display = 'none';
+            }
+        });
+    });
+
+    document.querySelectorAll('.movie-card').forEach(item => {
+        item.addEventListener('click', event => {
+            const title = item.querySelector('h5').textContent;
+            triggerSearch(title);
+        });
+    });
+</script>
+</body>
+</html>
