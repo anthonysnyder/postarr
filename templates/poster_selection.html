@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select a Poster for "{{ movie_title }}"</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .card-body p {
+            color: #000; /* Change text color to black */
+        }
+    </style>
+</head>
+<body class="bg-dark text-light">
+    <div class="container">
+        <h1 class="text-center my-4">Select a Poster for "{{ movie_title }}"</h1>
+        <div class="row">
+            {% for poster in posters %}
+            <div class="col-md-3">
+                <div class="card mb-4">
+                    <img src="{{ poster.url }}" class="card-img-top" alt="Poster">
+                    <div class="card-body text-center" style="background-color: #f8f9fa;"> <!-- Lighter background -->
+                        <p class="card-text">{{ poster.size }} - {{ poster.language }}</p>
+                        <form action="{{ url_for('select_poster') }}" method="POST">
+                            <input type="hidden" name="poster_path" value="{{ poster.url }}">
+                            <input type="hidden" name="movie_title" value="{{ movie_title }}">
+                            <button type="submit" class="btn btn-primary">Select Poster</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
