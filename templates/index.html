@@ -38,7 +38,7 @@
     <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
     <button class="btn btn-primary mt-2" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
     <button class="btn btn-secondary mt-2" onclick="showAllMovies()">Show All</button>
-
+    <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>
     <div id="movieList" class="movie-grid">
         {% for movie in movies %}
         <div class="movie-card" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
