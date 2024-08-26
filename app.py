@@ -63,6 +63,12 @@ def index():
     # Render the index page with the movie data
     return render_template('index.html', movies=movies)
 
+# Route to refresh index.html
+@app.route('/refresh')
+def refresh():
+    get_poster_thumbnails()  # Re-scan the directories
+    return redirect(url_for('index'))
+
 # Route for searching movies using TMDb API
 @app.route('/search', methods=['GET'])
 def search_movie():
