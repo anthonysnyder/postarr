@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} Posters</title>
+    <style>
+        .poster-grid {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .poster-grid img {
+            max-width: 200px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Posters for {{ title }}</h1>
+    <div class="poster-grid">
+        {% for poster in posters %}
+            <div class="poster-item">
+                <img src="{{ poster.url }}" alt="Poster" onclick="selectPoster('{{ title }}', '{{ poster.url }}')">
+            </div>
+        {% endfor %}
+    </div>
+    <form id="posterForm" method="POST" action="{{ url_for('select_poster') }}">
+        <input type="hidden" id="movieTitle" name="movie_title" value="">
+        <input type="hidden" id="posterUrl" name="poster_url" value="">
+    </form>
+
+    <script>
+        function selectPoster(title, url) {
+            document.getElementById('movieTitle').value = title;
+            document.getElementById('posterUrl').value = url;
+            document.getElementById('posterForm').submit();
+        }
+    </script>
+</body>
+</html>
