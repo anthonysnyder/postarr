@@ -59,6 +59,25 @@ To enable Slack notifications, add your Slack Webhook URL in the SLACK_WEBHOOK_U
 environment:
   - SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
 ```
+## Screenshots
+
+### 1) This screenshot shows the main index page of the Posterr application, displaying a grid layout of movies with thumbnails.
+![This screenshot shows the main index page of the Posterr application, displaying a grid layout of movies with thumbnails.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Index.html%20Layout.png)
+
+### 2) This screenshot displays the TMDb search results page, where users can select the correct movie from a list of search results.
+![This screenshot displays the TMDb search results page, where users can select the correct movie from a list of search results.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Movie%20Selection%20View.png)
+
+### 3) This screenshot shows the main index page highlighting movies that currently have no associated poster image.
+![This screenshot shows the main index page highlighting movies that currently have no associated poster image.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Movies%20with%20No%20Poster%20view.png)
+
+### 4) This screenshot displays the poster selection screen, where users can choose an official poster for the selected movie from the available options.
+![This screenshot displays the poster selection screen, where users can choose an official poster for the selected movie from the available options.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Poster%20Selection%20View.png)
+
+### 5) This screenshot shows a Slack notification sent by the Posterr application, confirming the successful download of a movie poster.
+![This screenshot shows a Slack notification sent by the Posterr application, confirming the successful download of a movie poster.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Slack%20Notififcation%20view.png)
+
+### 6) This screenshot displays the Synology interface where the Posterr application is running, showing the folder structure used for storing movie posters.
+![This screenshot displays the Synology interface where the Posterr application is running, showing the folder structure used for storing movie posters.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Synology%20view.png)
 Feel free to fork the repo and submit pull requests. Your contributions are welcome!
 
 License
