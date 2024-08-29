@@ -1,7 +1,7 @@
-# Posterr
-🎬 Posterr: (Partially)Automate your movie poster collection! Posterr is a Flask app that scrapes movie directories and downloads high-quality posters from TheMovieDB. Designed for seamless integration with Docker on Synology NAS. Optional Slack integration for instant notifications!
+# Postarr
+🎬 Postarr: (Partially)Automate your movie poster collection! Postarr is a Flask app that scrapes movie directories and downloads high-quality posters from TheMovieDB. Designed for seamless integration with Docker on Synology NAS. Optional Slack integration for instant notifications!
 
-Welcome to Posterr, a Flask-based application designed to automatically scrape your movie directories and download high-quality posters from TheMovieDB (TMDb). Whether you’re managing a vast movie collection on your Synology NAS or simply want to keep your movie library visually appealing, Posterr is here to help. Additionally, you can opt-in for Slack notifications to get instant updates when new posters are added!
+Welcome to Postarr, a Flask-based application designed to automatically scrape your movie directories and download high-quality posters from TheMovieDB (TMDb). Whether you’re managing a vast movie collection on your Synology NAS or simply want to keep your movie library visually appealing, Postarr is here to help. Additionally, you can opt-in for Slack notifications to get instant updates when new posters are added!
 
 ## Features
 
@@ -21,8 +21,8 @@ Welcome to Posterr, a Flask-based application designed to automatically scrape y
 
 ## 1. Clone the Repository:
 ```
-git clone https://github.com/anthonysnyder/posterr.git
-cd posterr
+git clone https://github.com/anthonysnyder/Postarr.git
+cd Postarr
 ```
 ## 2. Setup Docker Compose:
 Create a docker-compose.yml file in the root directory of the project:
@@ -30,9 +30,9 @@ Create a docker-compose.yml file in the root directory of the project:
 version: '3.8'
 
 services:
-  posterr:
-    image: swguru2004/posterr:latest
-    container_name: posterr
+  Postarr:
+    image: swguru2004/Postarr:latest
+    container_name: Postarr
     environment:
       - TMDB_API_KEY=your_tmdb_api_key
       - SLACK_WEBHOOK_URL=your_slack_webhook_url  # Optional
@@ -50,7 +50,7 @@ services:
 docker-compose up -d
 ```
 ##	4.	Access the Application:
-Open your browser and go to http://localhost:5000 or your NAS IP to start using Posterr.
+Open your browser and go to http://localhost:5000 or your NAS IP to start using Postarr.
 
 ## Slack Integration (Optional)
 
@@ -61,27 +61,27 @@ environment:
 ```
 ## Screenshots
 
-### 1) This screenshot shows the main index page of the Posterr application, displaying a grid layout of movies with thumbnails.
-![This screenshot shows the main index page of the Posterr application, displaying a grid layout of movies with thumbnails.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Index.html%20Layout.png)
+### 1) This screenshot shows the main index page of the Postarr application, displaying a grid layout of movies with thumbnails.
+![This screenshot shows the main index page of the Postarr application, displaying a grid layout of movies with thumbnails.](https://github.com/anthonysnyder/Postarr/blob/main/screenshots/Index.html%20Layout.png)
 
 ### 2) This screenshot displays the TMDb search results page, where users can select the correct movie from a list of search results.
-![This screenshot displays the TMDb search results page, where users can select the correct movie from a list of search results.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Movie%20Selection%20View.png)
+![This screenshot displays the TMDb search results page, where users can select the correct movie from a list of search results.](https://github.com/anthonysnyder/Postarr/blob/main/screenshots/Movie%20Selection%20View.png)
 
 ### 3) This screenshot shows the main index page highlighting movies that currently have no associated poster image.
-![This screenshot shows the main index page highlighting movies that currently have no associated poster image.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Movies%20with%20No%20Poster%20view.png)
+![This screenshot shows the main index page highlighting movies that currently have no associated poster image.](https://github.com/anthonysnyder/Postarr/blob/main/screenshots/Movies%20with%20No%20Poster%20view.png)
 
 ### 4) This screenshot displays the poster selection screen, where users can choose an official poster for the selected movie from the available options.
-![This screenshot displays the poster selection screen, where users can choose an official poster for the selected movie from the available options.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Poster%20Selection%20View.png)
+![This screenshot displays the poster selection screen, where users can choose an official poster for the selected movie from the available options.](https://github.com/anthonysnyder/Postarr/blob/main/screenshots/Poster%20Selection%20View.png)
 
-### 5) This screenshot shows a Slack notification sent by the Posterr application, confirming the successful download of a movie poster.
-![This screenshot shows a Slack notification sent by the Posterr application, confirming the successful download of a movie poster.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Slack%20Notififcation%20view.png)
+### 5) This screenshot shows a Slack notification sent by the Postarr application, confirming the successful download of a movie poster.
+![This screenshot shows a Slack notification sent by the Postarr application, confirming the successful download of a movie poster.](https://github.com/anthonysnyder/Postarr/blob/main/screenshots/Slack%20Notififcation%20view.png)
 
-### 6) This screenshot displays the Synology interface where the Posterr application is running, showing the folder structure used for storing movie posters.
-![This screenshot displays the Synology interface where the Posterr application is running, showing the folder structure used for storing movie posters.](https://github.com/anthonysnyder/posterr/blob/main/screenshots/Synology%20view.png)
+### 6) This screenshot displays the Synology interface where the Postarr application is running, showing the folder structure used for storing movie posters.
+![This screenshot displays the Synology interface where the Postarr application is running, showing the folder structure used for storing movie posters.](https://github.com/anthonysnyder/Postarr/blob/main/screenshots/Synology%20view.png)
 Feel free to fork the repo and submit pull requests. Your contributions are welcome!
 
 License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
 
-For more details, visit the [Posterr GitHub Repository](https://github.com/anthonysnyder/posterr/).
+For more details, visit the [Postarr GitHub Repository](https://github.com/anthonysnyder/posterr/).
