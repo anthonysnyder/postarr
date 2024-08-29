@@ -6,54 +6,137 @@
     <title>My Movie Collection</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        body {
+            background-color: #343a40; /* Dark background */
+            color: #fff; /* Light text */
+        }
+
+        #wrapper {
+            display: flex;
+            width: 100%;
+        }
+
+        #sidebar-wrapper {
+            width: 250px;
+            background-color: #212529; /* Darker sidebar */
+            border-right: 1px solid #444;
+        }
+
+        .sidebar-heading {
+            padding: 1rem;
+            font-size: 1.5rem;
+            background-color: #1d2124;
+            text-align: center;
+        }
+
+        .list-group-item {
+            background-color: #212529;
+            color: #fff;
+            border: none;
+        }
+
+        .list-group-item:hover {
+            background-color: #343a40;
+        }
+
+        #page-content-wrapper {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
         .movie-grid {
             display: flex;
             flex-wrap: wrap;
         }
+
         .movie-card {
             flex: 0 0 16.66%;
             max-width: 16.66%;
             padding: 10px;
             box-sizing: border-box;
         }
+
         .movie-card img {
             width: 100%;
             height: auto;
             object-fit: cover;
             border-radius: 8px;
-            max-height: 300px;
+            /* Removed max-height to allow full thumbnail display */
         }
+
         .movie-card h5 {
             font-size: 1rem;
             margin-top: 10px;
             text-align: center;
             cursor: pointer;
         }
+
+        .card {
+            background-color: #454d55; /* Darker cards */
+            border: none;
+            border-radius: 8px;
+        }
+
+        .card-body {
+            background-color: #6c757d; /* Light gray for card bodies */
+            padding: 1rem;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1 class="my-4">My Movie Collection</h1>
-    
-    <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
-    <button class="btn btn-primary mt-2" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
-    <button class="btn btn-secondary mt-2" onclick="showAllMovies()">Show All</button>
-    <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>
-    <div id="movieList" class="movie-grid">
-        {% for movie in movies %}
-        <div class="movie-card" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
-            <div>
-                {% if movie.poster %}
-                <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
-                {% else %}
-                <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
-                    <span>No Poster</span>
-                </div>
-                {% endif %}
-            </div>
-            <h5 class="mt-2" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+<div id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-dark border-right" id="sidebar-wrapper">
+        <div class="sidebar-heading">My Movie Collection</div>
+        <div class="list-group list-group-flush">
+            <a href="/" class="list-group-item list-group-item-action">Dashboard</a>
+            <a href="/movies" class="list-group-item list-group-item-action">Movies</a>
         </div>
-        {% endfor %}
+    </div>
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <h1 class="my-4">Dashboard</h1>
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-light text-dark mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Movies</h5>
+                            <p class="card-text">{{ total_movies }}</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Additional Widgets can be added here -->
+            </div>
+
+            <h1 class="my-4">My Movie Collection</h1>
+            
+            <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
+            <div class="btn-group mt-2 mb-4" role="group">
+                <button class="btn btn-primary" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
+                <button class="btn btn-secondary" onclick="showAllMovies()">Show All</button>
+                <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>
+            </div>
+            
+            <div id="movieList" class="movie-grid">
+                {% for movie in movies %}
+                <div class="movie-card" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
+                    <div>
+                        {% if movie.poster %}
+                        <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
+                        {% else %}
+                        <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                            <span>No Poster</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h5 class="mt-2" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -68,10 +151,8 @@
     function triggerSearch(title) {
         console.log("Clicked on:", title);
         try {
-            // Remove the year from the title and trim any leading/trailing whitespace
             const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
             console.log(`Cleaned title: ${cleanTitle}`);
-            // Initiate the search by redirecting to the search route with the cleaned title
             window.location.href = `/search?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
         } catch (error) {
             console.error('Error in triggerSearch:', error);

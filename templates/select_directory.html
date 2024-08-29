@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Directory</title>
+</head>
+<body>
+    <h1>Directory Not Found</h1>
+    <p>The directory for <strong>{{ movie_title }}</strong> was not found. Please select a directory from the list below:</p>
+    
+    <form action="{{ url_for('confirm_directory') }}" method="post">
+        <input type="hidden" name="poster_path" value="{{ poster_path }}">
+        <input type="hidden" name="movie_title" value="{{ movie_title }}">
+        {% for directory in similar_dirs %}
+            <div>
+                <input type="radio" name="selected_directory" value="{{ directory }}" id="{{ directory }}">
+                <label for="{{ directory }}">{{ directory }}</label>
+            </div>
+        {% endfor %}
+        <button type="submit">Save Poster</button>
+    </form>
+</body>
+</html

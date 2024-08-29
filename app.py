@@ -2,6 +2,7 @@ import os
 import requests
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from difflib import get_close_matches
 
 app = Flask(__name__)
 
@@ -20,15 +21,19 @@ base_folders = [
     "/kids-movies2"
 ]
 
+# Function to normalize the movie title for consistent search queries
+def normalize_title(title):
+    return title.lower().replace("'", "").replace("-", "").replace(":", "").replace("&", "and").strip()
+
 # Function to retrieve movie directories and their associated posters (thumbnails) for the index page
 def get_poster_thumbnails():
     movies = []
     
     # Iterate over all base folders
     for base_folder in base_folders:
-        # Get sorted list of directories (movies) within each base folder
         for movie_dir in sorted(os.listdir(base_folder)):
-            movie_path = os.path.join(base_folder, movie_dir)
+            original_movie_dir = movie_dir  # Store the original directory name
+            movie_path = os.path.join(base_folder, original_movie_dir)  # Use original name for paths
             
             # Check if the path is a directory (i.e., a movie directory)
             if os.path.isdir(movie_path):
@@ -38,7 +43,8 @@ def get_poster_thumbnails():
                 for ext in ['jpg', 'jpeg', 'png']:
                     poster_path = os.path.join(movie_path, f"poster.{ext}")
                     if os.path.exists(poster_path):
-                        poster = f"/poster/{urllib.parse.quote(movie_dir)}/poster.{ext}"
+                        # Generate the poster URL using the /poster/ route
+                        poster = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster.{ext}"
                         break
 
                 # List all files in the movie directory (e.g., movie files)
@@ -46,7 +52,7 @@ def get_poster_thumbnails():
                 
                 # Append movie details to the list
                 movies.append({
-                    'title': movie_dir,
+                    'title': original_movie_dir,
                     'poster': poster,
                     'movie_files': movie_files
                 })
@@ -57,7 +63,7 @@ def get_poster_thumbnails():
 # Route for the index page
 @app.route('/')
 def index():
-    # Get the list of movies with thumbnails
+    # Fetch the list of movies and their posters
     movies = get_poster_thumbnails()
     
     # Render the index page with the movie data
@@ -75,11 +81,11 @@ def search_movie():
     # Get the query string from the URL parameters
     query = request.args.get('query', '')
     
-    # Clean the query by removing any year and parentheses
-    cleaned_query = query.replace("(", "").replace(")", "").strip()
+    # Normalize the search query (this will act as normalized_movie_dir)
+    normalized_movie_dir = normalize_title(query)
     
     # Make a request to the TMDb API to search for movies
-    response = requests.get(f"{BASE_URL}/search/movie", params={"api_key": TMDB_API_KEY, "query": cleaned_query})
+    response = requests.get(f"{BASE_URL}/search/movie", params={"api_key": TMDB_API_KEY, "query": normalized_movie_dir})
     results = response.json().get('results', [])
     
     # Render the search results page with the movies found
@@ -102,7 +108,7 @@ def select_movie(movie_id):
     
     # Format the poster URLs for display
     posters = [{'url': f"{POSTER_BASE_URL}{poster['file_path']}", 'size': f"{poster['width']}x{poster['height']}"} for poster in posters]
-    
+
     # Render the poster selection page with the available posters
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title)
 
@@ -112,20 +118,29 @@ def select_poster():
     # Get the selected poster path and movie title from the form submission
     poster_path = request.form['poster_path']
     movie_title = request.form['movie_title']
-    
-    # Determine the correct save directory based on the movie title
+
+    # Initialize save_dir as None
     save_dir = None
+    possible_dirs = []
+
+    # Search for the correct directory based on the exact movie title
     for base_folder in base_folders:
-        potential_save_dir = os.path.join(base_folder, movie_title)
-        if os.path.exists(potential_save_dir):
-            save_dir = potential_save_dir
+        directories = os.listdir(base_folder)
+        possible_dirs.extend(directories)
+        for directory in directories:
+            if directory == movie_title:
+                save_dir = os.path.join(base_folder, directory)
+                break
+        if save_dir:
             break
 
-    # If no existing directory is found, create one in the first base folder
+    # If no exact match is found, present a dialog with similar directories
     if not save_dir:
-        save_dir = os.path.join(base_folders[0], movie_title)
-        os.makedirs(save_dir, exist_ok=True)
+        # Find similar directory names
+        similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
+        return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_path)
 
+    # Define the full path for saving the poster
     save_path = os.path.join(save_dir, 'poster.jpg')
 
     # Download and save the poster
@@ -147,9 +162,49 @@ def select_poster():
         }
         requests.post(slack_webhook_url, json=message)
 
-    return redirect(url_for('index'))
+    # Redirect after saving
+    return redirect(url_for('index', without_posters='true'))
 
-# Route to serve posters from the movie directories
+# Route for confirming the directory and saving the poster
+@app.route('/confirm_directory', methods=['POST'])
+def confirm_directory():
+    # Get the selected directory and other details from the form submission
+    selected_directory = request.form['selected_directory']
+    movie_title = request.form['movie_title']
+    poster_path = request.form['poster_path']
+    
+    # Construct the save directory path
+    for base_folder in base_folders:
+        if selected_directory in os.listdir(base_folder):
+            save_dir = os.path.join(base_folder, selected_directory)
+            break
+
+    # Define the full path for saving the poster
+    save_path = os.path.join(save_dir, 'poster.jpg')
+
+    # Download and save the poster
+    poster_data = requests.get(poster_path).content
+    with open(save_path, 'wb') as file:
+        file.write(poster_data)
+
+    # Send notification to Slack
+    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+    if slack_webhook_url:
+        message = {
+            "text": f"Poster for '{movie_title}' has been downloaded!",
+            "attachments": [
+                {
+                    "text": f"Saved To\n{save_path}",
+                    "image_url": poster_path
+                }
+            ]
+        }
+        requests.post(slack_webhook_url, json=message)
+
+    # Redirect after saving
+    return redirect(url_for('index', without_posters='true'))
+
+# Route for serving posters
 @app.route('/poster/<path:filename>')
 def serve_poster(filename):
     # Determine which base folder contains the requested file
