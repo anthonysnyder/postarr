@@ -106,10 +106,18 @@ def select_movie(movie_id):
     # Filter posters to only include English ones
     posters = [poster for poster in posters if poster['iso_639_1'] == 'en']
     
-    # Format the poster URLs for display
-    posters = [{'url': f"{POSTER_BASE_URL}{poster['file_path']}", 'size': f"{poster['width']}x{poster['height']}"} for poster in posters]
+    # Sort posters by resolution (width * height)
+    def poster_resolution(poster):
+        # Extract width and height from the poster size (e.g., '1000x1500')
+        dimensions = poster['width'], poster['height']
+        return dimensions[0] * dimensions[1]  # Calculate the area of the poster
+    
+    posters_sorted = sorted(posters, key=poster_resolution, reverse=True)  # Sort by area in descending order
 
-    # Render the poster selection page with the available posters
+    # Format the poster URLs for display
+    posters = [{'url': f"{POSTER_BASE_URL}{poster['file_path']}", 'size': f"{poster['width']}x{poster['height']}", 'language': poster['iso_639_1']} for poster in posters_sorted]
+
+    # Render the poster selection page with the sorted posters
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title)
 
 # Route for handling poster selection and downloading
