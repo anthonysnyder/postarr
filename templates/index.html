@@ -132,7 +132,9 @@
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+                    <!-- Apply text-center class to title and dimensions for centering -->
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+                    <p class="poster-dimensions text-center">Dimensions: {{ movie.poster_dimensions }}</p>
                 </div>
                 {% endfor %}
             </div>

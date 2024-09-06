@@ -1,22 +1,22 @@
-# Use an official Python runtime as a parent image
+# Example Dockerfile for a Python/Flask app
+
+# Base image with Python
 FROM python:3.12-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV FLASK_APP=app.py
-
-# Set the working directory in the container
+# Set the working directory inside the container
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Install any needed packages specified in requirements.txt
+# Install the required Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port 5000 to the outside world
+# Install Pillow in the container
+RUN pip install Pillow
+
+# Expose the port that Flask runs on
 EXPOSE 5000
 
-# Run the Flask app
+# Define the command to run the Flask app
 CMD ["flask", "run", "--host=0.0.0.0"]

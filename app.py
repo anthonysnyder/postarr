@@ -3,6 +3,7 @@ import requests
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from difflib import get_close_matches
+from PIL import Image  # Import Pillow to work with images
 
 app = Flask(__name__)
 
@@ -11,7 +12,7 @@ TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 
 # Base URLs for TMDb API and images
 BASE_URL = "https://api.themoviedb.org/3"
-POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
+POSTER_BASE_URL = "https://image.tmdb.org/t/p/original"
 
 # Define the base folders for your movie directories
 base_folders = [
@@ -32,12 +33,17 @@ def get_poster_thumbnails():
     # Iterate over all base folders
     for base_folder in base_folders:
         for movie_dir in sorted(os.listdir(base_folder)):
+            # Ignore @eadir directories
+            if movie_dir == "@eadir":
+                continue
+            
             original_movie_dir = movie_dir  # Store the original directory name
             movie_path = os.path.join(base_folder, original_movie_dir)  # Use original name for paths
             
             # Check if the path is a directory (i.e., a movie directory)
             if os.path.isdir(movie_path):
                 poster = None
+                poster_dimensions = None  # Initialize poster dimensions
                 
                 # Look for an existing poster in the directory
                 for ext in ['jpg', 'jpeg', 'png']:
@@ -45,20 +51,33 @@ def get_poster_thumbnails():
                     if os.path.exists(poster_path):
                         # Generate the poster URL using the /poster/ route
                         poster = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster.{ext}"
+                        
+                        # Extract poster dimensions using Pillow
+                        try:
+                            with Image.open(poster_path) as img:
+                                width, height = img.size
+                                poster_dimensions = f"{width}x{height}"
+                        except Exception as e:
+                            poster_dimensions = "Unknown"
+                        
                         break
 
                 # List all files in the movie directory (e.g., movie files)
                 movie_files = os.listdir(movie_path)
                 
-                # Append movie details to the list
+                # Append movie details to the list, including poster dimensions
                 movies.append({
                     'title': original_movie_dir,
                     'poster': poster,
+                    'poster_dimensions': poster_dimensions,  # Add poster dimensions
                     'movie_files': movie_files
                 })
     
-    # Return the list of movies and their associated posters
-    return movies
+    # Sort the movies globally by title, regardless of volume
+    movies_sorted = sorted(movies, key=lambda x: x['title'].lower())
+    
+    # Return the sorted list of movies and their associated posters
+    return movies_sorted
 
 # Route for the index page
 @app.route('/')
@@ -120,6 +139,8 @@ def select_movie(movie_id):
     # Render the poster selection page with the sorted posters
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title)
 
+import os
+
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
@@ -148,19 +169,26 @@ def select_poster():
         similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
         return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_path)
 
-    # Define the full path for saving the poster
+    # Define the new poster's save path with the .jpg extension
     save_path = os.path.join(save_dir, 'poster.jpg')
 
-    # Download and save the poster
+  # Remove any existing poster files with .jpg, .jpeg, or .png extensions
+    for ext in ['jpg', 'jpeg', 'png']:
+      for file in os.listdir(save_dir):
+        if file.lower() == f'poster.{ext}':  # Make comparison case-insensitive
+            os.remove(os.path.join(save_dir, file))  # Delete the existing poster file
+ 
+
+    # Download and save the new poster (which will overwrite or replace the old one)
     poster_data = requests.get(poster_path).content
     with open(save_path, 'wb') as file:
         file.write(poster_data)
 
-    # Send notification to Slack
+    # Send notification to Slack (if applicable)
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
     if slack_webhook_url:
         message = {
-            "text": f"Poster for '{movie_title}' has been downloaded!",
+            "text": f"Poster for '{movie_title}' has been downloaded and saved!",
             "attachments": [
                 {
                     "text": f"Saved To\n{save_path}",
@@ -209,7 +237,6 @@ def confirm_directory():
         }
         requests.post(slack_webhook_url, json=message)
 
-    # Redirect after saving
     return redirect(url_for('index', without_posters='true'))
 
 # Route for serving posters
