@@ -98,10 +98,10 @@ def get_poster_thumbnails():
 @app.route('/')
 def index():
     # Fetch the list of movies and their posters
-    movies = get_poster_thumbnails()
+    movies, total_movies = get_poster_thumbnails()  # Now returns both movies and the count
     
-    # Render the index page with the movie data
-    return render_template('index.html', movies=movies)
+        # Render the index page with the movie data and total count
+    return render_template('index.html', movies=movies, total_movies=total_movies)
 
 # Route to refresh index.html
 @app.route('/refresh')
