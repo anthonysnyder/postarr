@@ -132,10 +132,13 @@
                         </div>
                         {% endif %}
                     </div>
-                    <!-- Apply text-center class to title and dimensions for centering -->
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
-                    <p class="poster-dimensions text-center">Dimensions: {{ movie.poster_dimensions }}</p>
-                    <p class="poster-last-modified text-center">Last Modified: {{ movie.poster_last_modified }}</p>
+            
+                    <!-- Use a single paragraph to avoid line break and make labels bold -->
+                    <p class="text-center">
+                        <strong>Dimensions:</strong> {{ movie.poster_dimensions }} | 
+                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
+                    </p>
                 </div>
                 {% endfor %}
             </div>
