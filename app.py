@@ -91,8 +91,8 @@ def get_poster_thumbnails():
     movies_sorted = sorted(movies, key=lambda x: strip_leading_the(x['title'].lower()))
 
 
-    # Return the sorted list of movies and their associated posters
-    return movies_sorted
+    # Return the sorted list of movies and the total count
+    return movies_sorted, len(movies_sorted)
 
 # Route for the index page
 @app.route('/')
