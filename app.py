@@ -187,17 +187,19 @@ def select_poster():
     # Define the new poster's save path with the .jpg extension
     save_path = os.path.join(save_dir, 'poster.jpg')
 
-  # Remove any existing poster files with .jpg, .jpeg, or .png extensions
+    # Remove any existing poster files with .jpg, .jpeg, or .png extensions
     for ext in ['jpg', 'jpeg', 'png']:
-      for file in os.listdir(save_dir):
-        if file.lower() == f'poster.{ext}':  # Make comparison case-insensitive
-            os.remove(os.path.join(save_dir, file))  # Delete the existing poster file
- 
+        for file in os.listdir(save_dir):
+            if file.lower() == f'poster.{ext}':  # Make comparison case-insensitive
+                os.remove(os.path.join(save_dir, file))  # Delete the existing poster file
 
     # Download and save the new poster (which will overwrite or replace the old one)
     poster_data = requests.get(poster_path).content
     with open(save_path, 'wb') as file:
         file.write(poster_data)
+
+    # Create anchor based on the movie title
+    anchor = movie_title.lower().replace(' ', '-')
 
     # Send notification to Slack (if applicable)
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
@@ -213,7 +215,7 @@ def select_poster():
         }
         requests.post(slack_webhook_url, json=message)
 
-    # Redirect after saving
+    # Redirect back to the index page with an anchor to the selected movie
     return redirect(url_for('index') + f"#{anchor}")
 
 # Route for confirming the directory and saving the poster
