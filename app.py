@@ -214,7 +214,7 @@ def select_poster():
         requests.post(slack_webhook_url, json=message)
 
     # Redirect after saving
-    return redirect(url_for('index', without_posters='true'))
+    return redirect(url_for('index') + f"#{anchor}")
 
 # Route for confirming the directory and saving the poster
 @app.route('/confirm_directory', methods=['POST'])
