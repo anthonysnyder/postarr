@@ -120,7 +120,8 @@
                 <div class="movie-card" id="{{ movie.title | lower | replace(' ', '-') }}" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
                     <div>
                         {% if movie.poster %}
-                        <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
+                        <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
+                             alt="{{ movie.title }}" class="movie-poster" loading="lazy" onclick="triggerSearch('{{ movie.title }}')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
