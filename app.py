@@ -254,7 +254,7 @@ def confirm_directory():
         }
         requests.post(slack_webhook_url, json=message)
 
-    return redirect(url_for('index', without_posters='true'))
+    return redirect(url_for('index') + f"#{movie_title.lower().replace(' ', '-')}")
 
 # Route for serving posters
 @app.route('/poster/<path:filename>')
