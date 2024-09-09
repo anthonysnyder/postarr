@@ -113,7 +113,7 @@
             
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <div class="movie-card" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
+                <div class="movie-card" id="{{ movie.title | lower | replace(' ', '-') }}" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
                     <div>
                         {% if movie.poster %}
                         <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
@@ -124,12 +124,8 @@
                         {% endif %}
                     </div>
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
-            
-                    <!-- Use a single paragraph to avoid line break and make labels bold -->
-                    <p class="text-center">
-                        <strong>Dimensions:</strong> {{ movie.poster_dimensions }} | 
-                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
-                    </p>
+                    <p class="poster-dimensions text-center">Dimensions: {{ movie.poster_dimensions }} | 
+                    <strong>Last Modified:</strong> {{ movie.poster_last_modified }}</p>
                 </div>
                 {% endfor %}
             </div>
