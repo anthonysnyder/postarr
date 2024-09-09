@@ -27,8 +27,11 @@ base_folders = [
 def normalize_title(title):
     return title.lower().replace("'", "").replace("-", "").replace(":", "").replace("&", "and").strip()
 
-import os
-from datetime import datetime
+# Helper function to remove leading "The " for sorting purposes
+def strip_leading_the(title):
+    if title.lower().startswith("the "):
+        return title[4:]  # Remove "The " (4 characters)
+    return title
 
 # Function to retrieve movie directories and their associated posters (thumbnails) for the index page
 def get_poster_thumbnails():
@@ -83,9 +86,11 @@ def get_poster_thumbnails():
                     'movie_files': movie_files
                 })
     
-    # Sort the movies globally by title, regardless of volume
-    movies_sorted = sorted(movies, key=lambda x: x['title'].lower())
-    
+
+    # Sort the movies globally by title, ignoring "The" when sorting
+    movies_sorted = sorted(movies, key=lambda x: strip_leading_the(x['title'].lower()))
+
+
     # Return the sorted list of movies and their associated posters
     return movies_sorted
 
