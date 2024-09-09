@@ -138,7 +138,33 @@
 
 <script>
     console.log("Script tag reached");
+    
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.log("Error occurred: " + message);
+        return true;
+    };
 
+    function triggerSearch(title) {
+        console.log("Clicked on:", title);
+        try {
+            const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
+            console.log(`Cleaned title: ${cleanTitle}`);
+            window.location.href = `/search?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+        } catch (error) {
+            console.error('Error in triggerSearch:', error);
+        }
+    }
+
+    // Force scroll to the anchor on page load
+    window.addEventListener('DOMContentLoaded', (event) => {
+        const hash = window.location.hash;
+        if (hash) {
+            const targetElement = document.querySelector(hash);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    });
     window.onerror = function(message, source, lineno, colno, error) {
         console.log("Error occurred: " + message);
         return true;
@@ -193,6 +219,7 @@
             triggerSearch(title);
         });
     });
+    
 </script>
 </body>
 </html>
