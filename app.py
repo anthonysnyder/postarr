@@ -259,12 +259,22 @@ def confirm_directory():
 # Route for serving posters
 @app.route('/poster/<path:filename>')
 def serve_poster(filename):
-    # Determine which base folder contains the requested file
+    refresh = request.args.get('refresh', 'false')  # Check if refresh is requested
     for base_folder in base_folders:
         full_path = os.path.join(base_folder, filename)
         if os.path.exists(full_path):
-            return send_from_directory(base_folder, filename)
+            response = send_from_directory(base_folder, filename)
+            
+            if refresh == 'true':
+                # If refresh is requested, don't use caching
+                response.cache_control.no_cache = True
+                response.cache_control.must_revalidate = True
+                response.cache_control.max_age = 0
+            else:
+                # If no refresh, cache the image for 1 year
+                response.cache_control.max_age = 31536000  # Cache for 1 year (in seconds)
+                
+            return response
     return "File not found", 404
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
