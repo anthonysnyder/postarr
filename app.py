@@ -276,5 +276,11 @@ def serve_poster(filename):
                 
             return response
     return "File not found", 404
+
+# Route for refreshing index.html 
+@app.route('/refresh')
+def refresh_page():
+    return redirect(url_for('index', refresh='true'))
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
