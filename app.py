@@ -4,6 +4,7 @@ import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from difflib import get_close_matches
 from PIL import Image  # Import Pillow to work with images
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -26,6 +27,9 @@ base_folders = [
 def normalize_title(title):
     return title.lower().replace("'", "").replace("-", "").replace(":", "").replace("&", "and").strip()
 
+import os
+from datetime import datetime
+
 # Function to retrieve movie directories and their associated posters (thumbnails) for the index page
 def get_poster_thumbnails():
     movies = []
@@ -44,6 +48,7 @@ def get_poster_thumbnails():
             if os.path.isdir(movie_path):
                 poster = None
                 poster_dimensions = None  # Initialize poster dimensions
+                poster_last_modified = None  # Initialize last modified date
                 
                 # Look for an existing poster in the directory
                 for ext in ['jpg', 'jpeg', 'png']:
@@ -59,17 +64,22 @@ def get_poster_thumbnails():
                                 poster_dimensions = f"{width}x{height}"
                         except Exception as e:
                             poster_dimensions = "Unknown"
+
+                        # Get the last modified time of the poster and format only the date
+                        timestamp = os.path.getmtime(poster_path)
+                        poster_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')  # Only date
                         
                         break
 
                 # List all files in the movie directory (e.g., movie files)
                 movie_files = os.listdir(movie_path)
                 
-                # Append movie details to the list, including poster dimensions
+                # Append movie details to the list, including poster dimensions and last modified date
                 movies.append({
                     'title': original_movie_dir,
                     'poster': poster,
                     'poster_dimensions': poster_dimensions,  # Add poster dimensions
+                    'poster_last_modified': poster_last_modified,  # Add last modified date (only date)
                     'movie_files': movie_files
                 })
     
