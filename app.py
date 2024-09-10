@@ -199,7 +199,7 @@ def select_poster():
         file.write(poster_data)
 
     # Create anchor based on the movie title
-    anchor = movie_title.lower().replace(' ', '-')
+    anchor = movie_title.lower().replace(' ', '-').replace(':', '').replace("'", '').replace(',', '').replace('&', 'and')
 
     # Send notification to Slack (if applicable)
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')

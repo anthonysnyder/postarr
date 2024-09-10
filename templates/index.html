@@ -115,7 +115,7 @@
             
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <div class="movie-card" id="{{ movie.title | lower | replace(' ', '-') }}" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
+                <div class="movie-card" id="{{ movie.title | lower | replace(' ', '-') | replace(':', '') | replace("'", '') | replace(',', '') | replace('&', 'and') }}" data-title="{{ movie.title | lower }}">
                     <div>
                         {% if movie.poster %}
                         <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
@@ -138,7 +138,7 @@
 
 <script>
     console.log("Script tag reached");
-    
+
     window.onerror = function(message, source, lineno, colno, error) {
         console.log("Error occurred: " + message);
         return true;
@@ -157,14 +157,15 @@
 
     // Force scroll to the anchor on page load
     window.addEventListener('DOMContentLoaded', (event) => {
-        const hash = window.location.hash;
-        if (hash) {
-            const targetElement = document.querySelector(hash);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
-            }
+    const hash = window.location.hash;
+    if (hash) {
+        const targetElement = document.querySelector(decodeURIComponent(hash));
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth' });
         }
-    });
+    }
+});
+
     window.onerror = function(message, source, lineno, colno, error) {
         console.log("Error occurred: " + message);
         return true;
