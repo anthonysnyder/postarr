@@ -118,13 +118,13 @@
                 <div class="movie-card" 
                      id="{{ movie.title | lower 
                          | replace(' ', '-') 
-                         | replace(':', '') 
+                         | replace(':', '-') 
                          | replace("'", '') 
                          | replace(',', '') 
                          | replace('&', 'and') 
                          | replace('(', '') 
                          | replace(')', '') 
-                         | remove_year
+                         | remove_year 
                          | trim('-') }}" 
                      data-title="{{ movie.title | lower }}">
                     <div>
