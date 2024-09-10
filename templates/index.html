@@ -115,19 +115,7 @@
             
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <div class="movie-card" 
-                     id="{{ movie.title | lower 
-                         | replace(' ', '-') 
-                         | replace(':', '-')
-                         | replace("'", '') 
-                         | replace(',', '') 
-                         | replace('&', 'and') 
-                         | replace('(', '') 
-                         | replace(')', '') 
-                         | remove_year 
-                         | trim('-') 
-                         | replace('--', '-') }}"
-                     data-title="{{ movie.title | lower }}">
+                <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}">
                     <div>
                         {% if movie.poster %}
                         <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
@@ -143,7 +131,6 @@
                         Dimensions: {{ movie.poster_dimensions }} | 
                         <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
                     </p>
-                    <div>Generated ID: {{ movie.title | lower | replace(' ', '-') | replace(':', '-') | replace("'", '') | replace(',', '') | replace('&', 'and') | replace('(', '') | replace(')', '') | remove_year | trim('-') | replace('--', '-') }}</div>
                 </div>
                 {% endfor %}
             </div>
@@ -197,6 +184,35 @@
             console.error('Error in triggerSearch:', error);
         }
     }
+    
+    window.addEventListener('DOMContentLoaded', (event) => {
+    const anchor = window.location.hash.slice(1);  // Get the anchor without the '#'
+    console.log(`Navigating to anchor: ${anchor}`);
+    
+    if (anchor) {
+        try {
+            // Sanitize the anchor by replacing colons, spaces, and other problematic characters with dashes
+            const sanitizedAnchor = anchor
+                .replace(/[:\s]/g, '-')   // Replace colons and spaces with dashes
+                .replace(/[^\w-]/g, '')   // Remove non-alphanumeric characters except for dashes
+                .replace(/--+/g, '-')     // Collapse multiple dashes
+                .toLowerCase();           // Ensure consistency by using lowercase
+
+            console.log(`Sanitized anchor: ${sanitizedAnchor}`);
+
+            const targetElement = document.getElementById(sanitizedAnchor);
+            
+            if (targetElement) {
+                console.log(`Found element with ID: ${sanitizedAnchor}`);
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                console.error(`Element with ID "${sanitizedAnchor}" not found.`);
+            }
+        } catch (error) {
+            console.error(`Error occurred while navigating to anchor: ${error.message}`);
+        }
+    }
+});
 
     function showMoviesWithoutPoster() {
         console.log('Showing movies without posters.');

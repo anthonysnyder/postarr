@@ -39,33 +39,50 @@ def strip_leading_the(title):
         return title[4:]  # Remove "The " (4 characters)
     return title
 
+# Function to normalize the movie title for consistent search queries
+def normalize_title(title):
+    return title.lower().replace("'", "").replace("-", "").replace(":", "").replace("&", "and").strip()
+
+# Helper function to remove leading "The " for sorting purposes
+def strip_leading_the(title):
+    if title.lower().startswith("the "):
+        return title[4:]  # Remove "The " (4 characters)
+    return title
+
+# Function to generate a clean, anchor-safe ID from the movie title
+def generate_clean_id(title):
+    # Replace spaces, colons, and other non-alphanumeric characters with dashes
+    clean_id = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
+    clean_id = clean_id.replace(':', '-')  # Explicitly replace colons with dashes
+    return clean_id
+
 # Function to retrieve movie directories and their associated posters (thumbnails) for the index page
 def get_poster_thumbnails():
     movies = []
-    
+
     # Iterate over all base folders
     for base_folder in base_folders:
         for movie_dir in sorted(os.listdir(base_folder)):
             # Ignore @eadir directories
-            if movie_dir == "@eaDir":
+            if movie_dir == "@eadir":
                 continue
-            
+
             original_movie_dir = movie_dir  # Store the original directory name
             movie_path = os.path.join(base_folder, original_movie_dir)  # Use original name for paths
-            
+
             # Check if the path is a directory (i.e., a movie directory)
             if os.path.isdir(movie_path):
                 poster = None
                 poster_dimensions = None  # Initialize poster dimensions
                 poster_last_modified = None  # Initialize last modified date
-                
+
                 # Look for an existing poster in the directory
                 for ext in ['jpg', 'jpeg', 'png']:
                     poster_path = os.path.join(movie_path, f"poster.{ext}")
-                    if os.path.exists(poster_path) and not movie_dir.startswith('@eaDir'):  # Skip @eaDir
+                    if os.path.exists(poster_path):
                         # Generate the poster URL using the /poster/ route
                         poster = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster.{ext}"
-                        
+
                         # Extract poster dimensions using Pillow
                         try:
                             with Image.open(poster_path) as img:
@@ -80,18 +97,18 @@ def get_poster_thumbnails():
                         
                         break
 
-                # List all files in the movie directory, excluding @eaDir
-                movie_files = [f for f in os.listdir(movie_path) if not f.startswith('@eaDir')]
-                
+                # Generate clean ID for the movie
+                clean_id = generate_clean_id(original_movie_dir)
+
                 # Append movie details to the list, including poster dimensions and last modified date
                 movies.append({
                     'title': original_movie_dir,
                     'poster': poster,
                     'poster_dimensions': poster_dimensions,  # Add poster dimensions
                     'poster_last_modified': poster_last_modified,  # Add last modified date (only date)
-                    'movie_files': movie_files
+                    'clean_id': clean_id  # Add the clean ID for the movie
                 })
-    
+
     # Sort the movies globally by title, ignoring "The" when sorting
     movies_sorted = sorted(movies, key=lambda x: strip_leading_the(x['title'].lower()))
 
