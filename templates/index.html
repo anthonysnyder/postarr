@@ -143,6 +143,7 @@
                         Dimensions: {{ movie.poster_dimensions }} | 
                         <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
                     </p>
+                    <div>Generated ID: {{ movie.title | lower | replace(' ', '-') | replace(':', '-') | replace("'", '') | replace(',', '') | replace('&', 'and') | replace('(', '') | replace(')', '') | remove_year | trim('-') | replace('--', '-') }}</div>
                 </div>
                 {% endfor %}
             </div>
