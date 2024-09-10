@@ -115,7 +115,19 @@
             
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <div class="movie-card" id="{{ movie.title | lower | replace(' ', '-') | replace(':', '') | replace("'", '') | replace(',', '') | replace('&', 'and') }}" data-title="{{ movie.title | lower }}">
+                <div class="movie-card" 
+                     id="{{ movie.title | lower 
+                         | replace(' ', '-') 
+                         | replace(':', '') 
+                         | replace("'", '') 
+                         | replace(',', '') 
+                         | replace('&', 'and') 
+                         | replace('(', '') 
+                         | replace(')', '') 
+                         | regex_replace(r'\d{4}', '') 
+                         | regex_replace(r'-+', '-')  # Collapse multiple hyphens into a single one
+                         | trim('-') }}" 
+                     data-title="{{ movie.title | lower }}">
                     <div>
                         {% if movie.poster %}
                         <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
@@ -127,8 +139,10 @@
                         {% endif %}
                     </div>
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
-                    <p class="poster-dimensions text-center">Dimensions: {{ movie.poster_dimensions }} | 
-                    <strong>Last Modified:</strong> {{ movie.poster_last_modified }}</p>
+                    <p class="poster-dimensions text-center">
+                        Dimensions: {{ movie.poster_dimensions }} | 
+                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
+                    </p>
                 </div>
                 {% endfor %}
             </div>
@@ -159,10 +173,12 @@
     window.addEventListener('DOMContentLoaded', (event) => {
     const hash = window.location.hash;
     if (hash) {
-        const targetElement = document.querySelector(decodeURIComponent(hash));
-        if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth' });
-        }
+        setTimeout(() => {
+            const targetElement = document.querySelector(decodeURIComponent(hash));
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 200);  // Delay to ensure page is fully loaded
     }
 });
 
