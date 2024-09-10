@@ -1,5 +1,6 @@
 import os
 import requests
+import re
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from difflib import get_close_matches
@@ -7,6 +8,11 @@ from PIL import Image  # Import Pillow to work with images
 from datetime import datetime
 
 app = Flask(__name__)
+
+# Custom filter to remove years from 1900 to 2399
+@app.template_filter('remove_year')
+def remove_year(value):
+    return re.sub(r'\b(19|20|21|22|23)\d{2}\b', '', value).strip()
 
 # Fetch TMDb API key from environment variables (use with Docker)
 TMDB_API_KEY = os.getenv('TMDB_API_KEY')

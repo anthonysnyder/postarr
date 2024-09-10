@@ -124,8 +124,7 @@
                          | replace('&', 'and') 
                          | replace('(', '') 
                          | replace(')', '') 
-                         | regex_replace(r'\d{4}', '') 
-                         | regex_replace(r'-+', '-')  # Collapse multiple hyphens into a single one
+                         | remove_year
                          | trim('-') }}" 
                      data-title="{{ movie.title | lower }}">
                     <div>
@@ -146,7 +145,6 @@
                 </div>
                 {% endfor %}
             </div>
-        </div>
     </div>
 </div>
 
