@@ -41,7 +41,7 @@ def get_poster_thumbnails():
     for base_folder in base_folders:
         for movie_dir in sorted(os.listdir(base_folder)):
             # Ignore @eadir directories
-            if movie_dir == "@eadir":
+            if movie_dir == "@eaDir":
                 continue
             
             original_movie_dir = movie_dir  # Store the original directory name
@@ -56,7 +56,7 @@ def get_poster_thumbnails():
                 # Look for an existing poster in the directory
                 for ext in ['jpg', 'jpeg', 'png']:
                     poster_path = os.path.join(movie_path, f"poster.{ext}")
-                    if os.path.exists(poster_path):
+                    if os.path.exists(poster_path) and not movie_dir.startswith('@eaDir'):  # Skip @eaDir
                         # Generate the poster URL using the /poster/ route
                         poster = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster.{ext}"
                         
@@ -74,8 +74,8 @@ def get_poster_thumbnails():
                         
                         break
 
-                # List all files in the movie directory (e.g., movie files)
-                movie_files = os.listdir(movie_path)
+                # List all files in the movie directory, excluding @eaDir
+                movie_files = [f for f in os.listdir(movie_path) if not f.startswith('@eaDir')]
                 
                 # Append movie details to the list, including poster dimensions and last modified date
                 movies.append({
@@ -85,6 +85,12 @@ def get_poster_thumbnails():
                     'poster_last_modified': poster_last_modified,  # Add last modified date (only date)
                     'movie_files': movie_files
                 })
+    
+    # Sort the movies globally by title, ignoring "The" when sorting
+    movies_sorted = sorted(movies, key=lambda x: strip_leading_the(x['title'].lower()))
+
+    # Return the sorted list of movies and the total count
+    return movies_sorted, len(movies_sorted)
     
 
     # Sort the movies globally by title, ignoring "The" when sorting
@@ -262,6 +268,9 @@ def serve_poster(filename):
     refresh = request.args.get('refresh', 'false')  # Check if refresh is requested
     for base_folder in base_folders:
         full_path = os.path.join(base_folder, filename)
+        # Ignore files within @eaDir
+        if '@eaDir' in full_path:
+            continue
         if os.path.exists(full_path):
             response = send_from_directory(base_folder, filename)
             
