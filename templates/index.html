@@ -61,7 +61,6 @@
             height: auto;
             object-fit: cover;
             border-radius: 8px;
-            /* Removed max-height to allow full thumbnail display */
         }
 
         .movie-card h5 {
@@ -158,31 +157,33 @@
         }
     }
 
-    // Ensure scroll to the anchor happens after the page fully loads
+    // Scroll once the page has fully loaded
     window.onload = function() {
+    setTimeout(() => {
         const hash = window.location.hash;
         if (hash) {
             const anchor = hash.slice(1);  // Get anchor without '#'
             console.log(`Navigating to anchor: ${anchor}`);
             
             try {
-                // Use CSS.escape to handle special characters
-                const sanitizedAnchor = CSS.escape(anchor);  
-                console.log(`Sanitized anchor: ${sanitizedAnchor}`);
-                
-                const targetElement = document.getElementById(sanitizedAnchor);
-                
+                // Check and log all IDs present in the document
+                const allIds = Array.from(document.querySelectorAll("[id]")).map(el => el.id);
+                console.log("Available IDs on the page:", allIds);
+
+                const targetElement = document.getElementById(anchor);
+
                 if (targetElement) {
-                    console.log(`Found element with ID: ${sanitizedAnchor}`);
+                    console.log(`Found element with ID: ${anchor}`);
                     targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    console.error(`Element with ID "${sanitizedAnchor}" not found.`);
+                    console.error(`Element with ID "${anchor}" not found.`);
                 }
             } catch (error) {
                 console.error(`Error occurred while navigating to anchor: ${error.message}`);
             }
         }
-    };
+    }, 500);  // Delay to ensure page fully renders before scrolling
+};
 
     function showMoviesWithoutPoster() {
         console.log('Showing movies without posters.');
@@ -222,6 +223,7 @@
             triggerSearch(title);
         });
     });
+    
 </script>
 </body>
 </html>
