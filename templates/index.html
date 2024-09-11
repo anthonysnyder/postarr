@@ -162,34 +162,6 @@
     window.addEventListener('DOMContentLoaded', (event) => {
     const hash = window.location.hash;
     if (hash) {
-        setTimeout(() => {
-            const targetElement = document.querySelector(decodeURIComponent(hash));
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
-            }
-        }, 200);  // Delay to ensure page is fully loaded
-    }
-});
-
-    window.onerror = function(message, source, lineno, colno, error) {
-        console.log("Error occurred: " + message);
-        return true;
-    };
-
-    function triggerSearch(title) {
-        console.log("Clicked on:", title);
-        try {
-            const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
-            console.log(`Cleaned title: ${cleanTitle}`);
-            window.location.href = `/search?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
-        } catch (error) {
-            console.error('Error in triggerSearch:', error);
-        }
-    }
-    
-    window.addEventListener('DOMContentLoaded', (event) => {
-    const hash = window.location.hash;
-    if (hash) {
         const anchor = hash.slice(1);  // Get anchor without '#'
         console.log(`Navigating to anchor: ${anchor}`);
         
@@ -198,14 +170,17 @@
             const sanitizedAnchor = CSS.escape(anchor);  
             console.log(`Sanitized anchor: ${sanitizedAnchor}`);
             
-            const targetElement = document.getElementById(sanitizedAnchor);
-            
-            if (targetElement) {
-                console.log(`Found element with ID: ${sanitizedAnchor}`);
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                console.error(`Element with ID "${sanitizedAnchor}" not found.`);
-            }
+            setTimeout(() => {
+                const targetElement = document.getElementById(sanitizedAnchor);
+                
+                if (targetElement) {
+                    console.log(`Found element with ID: ${sanitizedAnchor}`);
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    console.error(`Element with ID "${sanitizedAnchor}" not found.`);
+                }
+            }, 500);  // Increased delay to 500ms
+
         } catch (error) {
             console.error(`Error occurred while navigating to anchor: ${error.message}`);
         }
