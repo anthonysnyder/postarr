@@ -158,19 +158,18 @@
         }
     }
 
-    // Force scroll to the anchor on page load
-    window.addEventListener('DOMContentLoaded', (event) => {
-    const hash = window.location.hash;
-    if (hash) {
-        const anchor = hash.slice(1);  // Get anchor without '#'
-        console.log(`Navigating to anchor: ${anchor}`);
-        
-        try {
-            // Use CSS.escape to handle special characters
-            const sanitizedAnchor = CSS.escape(anchor);  
-            console.log(`Sanitized anchor: ${sanitizedAnchor}`);
+    // Ensure scroll to the anchor happens after the page fully loads
+    window.onload = function() {
+        const hash = window.location.hash;
+        if (hash) {
+            const anchor = hash.slice(1);  // Get anchor without '#'
+            console.log(`Navigating to anchor: ${anchor}`);
             
-            setTimeout(() => {
+            try {
+                // Use CSS.escape to handle special characters
+                const sanitizedAnchor = CSS.escape(anchor);  
+                console.log(`Sanitized anchor: ${sanitizedAnchor}`);
+                
                 const targetElement = document.getElementById(sanitizedAnchor);
                 
                 if (targetElement) {
@@ -179,13 +178,12 @@
                 } else {
                     console.error(`Element with ID "${sanitizedAnchor}" not found.`);
                 }
-            }, 500);  // Increased delay to 500ms
-
-        } catch (error) {
-            console.error(`Error occurred while navigating to anchor: ${error.message}`);
+            } catch (error) {
+                console.error(`Error occurred while navigating to anchor: ${error.message}`);
+            }
         }
-    }
-});
+    };
+
     function showMoviesWithoutPoster() {
         console.log('Showing movies without posters.');
         const movies = document.querySelectorAll('#movieList .movie-card');
@@ -224,7 +222,6 @@
             triggerSearch(title);
         });
     });
-    
 </script>
 </body>
 </html>
