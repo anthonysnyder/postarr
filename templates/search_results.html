@@ -11,7 +11,8 @@
         <h1 class="my-4">Search Results for "{{ query }}"</h1>
         <div class="list-group">
             {% for result in results %}
-                <a href="{{ url_for('select_movie', movie_id=result.id) }}" class="list-group-item list-group-item-action">
+                <!-- Use clean_id for anchor links and IDs -->
+                <a href="{{ url_for('select_movie', movie_id=result.id) }}" id="{{ result.clean_id }}" class="list-group-item list-group-item-action">
                     <div class="d-flex align-items-center">
                         {% if result.poster_path %}
                             <img src="https://image.tmdb.org/t/p/w92{{ result.poster_path }}" alt="{{ result.title }}" class="mr-3">

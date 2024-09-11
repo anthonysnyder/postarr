@@ -51,10 +51,10 @@ def strip_leading_the(title):
 
 # Function to generate a clean, anchor-safe ID from the movie title
 def generate_clean_id(title):
-    # Replace spaces, colons, and other non-alphanumeric characters with dashes
+    # Replace all non-alphanumeric characters with dashes
     clean_id = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
-    clean_id = clean_id.replace(':', '-')  # Explicitly replace colons with dashes
     return clean_id
+
 
 # Function to retrieve movie directories and their associated posters (thumbnails) for the index page
 def get_poster_thumbnails():
@@ -151,8 +151,13 @@ def search_movie():
     response = requests.get(f"{BASE_URL}/search/movie", params={"api_key": TMDB_API_KEY, "query": normalized_movie_dir})
     results = response.json().get('results', [])
     
+    # Normalize TMDb titles using generate_clean_id
+    for result in results:
+        result['clean_id'] = generate_clean_id(result['title'])  # Apply the same normalization as folder names
+
     # Render the search results page with the movies found
     return render_template('search_results.html', query=query, results=results)
+
 
 # Route for selecting a movie and displaying available posters
 @app.route('/select_movie/<int:movie_id>', methods=['GET'])
@@ -160,8 +165,9 @@ def select_movie(movie_id):
     # Request details of the selected movie from TMDb API
     movie_details = requests.get(f"{BASE_URL}/movie/{movie_id}", params={"api_key": TMDB_API_KEY}).json()
     
-    # Extract the movie title from the details
+    # Extract the movie title from the details and generate clean_id
     movie_title = movie_details.get('title', '')
+    clean_id = generate_clean_id(movie_title)  # Normalize title for clean IDs
     
     # Request available posters for the selected movie
     posters = requests.get(f"{BASE_URL}/movie/{movie_id}/images", params={"api_key": TMDB_API_KEY}).json().get('posters', [])
@@ -171,7 +177,6 @@ def select_movie(movie_id):
     
     # Sort posters by resolution (width * height)
     def poster_resolution(poster):
-        # Extract width and height from the poster size (e.g., '1000x1500')
         dimensions = poster['width'], poster['height']
         return dimensions[0] * dimensions[1]  # Calculate the area of the poster
     
@@ -180,8 +185,8 @@ def select_movie(movie_id):
     # Format the poster URLs for display
     posters = [{'url': f"{POSTER_BASE_URL}{poster['file_path']}", 'size': f"{poster['width']}x{poster['height']}", 'language': poster['iso_639_1']} for poster in posters_sorted]
 
-    # Render the poster selection page with the sorted posters
-    return render_template('poster_selection.html', posters=posters, movie_title=movie_title)
+    # Render the poster selection page with the sorted posters and clean_id
+    return render_template('poster_selection.html', posters=posters, movie_title=movie_title, clean_id=clean_id)
 
 import os
 
@@ -283,7 +288,8 @@ def confirm_directory():
         }
         requests.post(slack_webhook_url, json=message)
 
-    return redirect(url_for('index') + f"#{movie_title.lower().replace(' ', '-')}")
+    anchor = generate_clean_id(movie_title)  # Use the function to generate the clean ID
+    return redirect(url_for('index') + f"#{anchor}")
 
 # Route for serving posters
 @app.route('/poster/<path:filename>')

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Movie Collection</title>
+    <title>Postarr</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
@@ -129,7 +129,9 @@
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
                     <p class="poster-dimensions text-center">
                         Dimensions: {{ movie.poster_dimensions }} | 
-                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
+                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}<br>
+                        <!-- TEMPORARY PRINT OF CLEAN ID -->
+                        <strong>Generated ID:</strong> {{ movie.clean_id }} <!-- Added this line to print clean_id -->
                     </p>
                 </div>
                 {% endfor %}
@@ -186,20 +188,16 @@
     }
     
     window.addEventListener('DOMContentLoaded', (event) => {
-    const anchor = window.location.hash.slice(1);  // Get the anchor without the '#'
-    console.log(`Navigating to anchor: ${anchor}`);
-    
-    if (anchor) {
+    const hash = window.location.hash;
+    if (hash) {
+        const anchor = hash.slice(1);  // Get anchor without '#'
+        console.log(`Navigating to anchor: ${anchor}`);
+        
         try {
-            // Sanitize the anchor by replacing colons, spaces, and other problematic characters with dashes
-            const sanitizedAnchor = anchor
-                .replace(/[:\s]/g, '-')   // Replace colons and spaces with dashes
-                .replace(/[^\w-]/g, '')   // Remove non-alphanumeric characters except for dashes
-                .replace(/--+/g, '-')     // Collapse multiple dashes
-                .toLowerCase();           // Ensure consistency by using lowercase
-
+            // Use CSS.escape to handle special characters
+            const sanitizedAnchor = CSS.escape(anchor);  
             console.log(`Sanitized anchor: ${sanitizedAnchor}`);
-
+            
             const targetElement = document.getElementById(sanitizedAnchor);
             
             if (targetElement) {
@@ -213,7 +211,6 @@
         }
     }
 });
-
     function showMoviesWithoutPoster() {
         console.log('Showing movies without posters.');
         const movies = document.querySelectorAll('#movieList .movie-card');
