@@ -174,12 +174,32 @@ def select_movie(movie_id):
     # Render the poster selection page with the sorted posters and clean_id
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title, clean_id=clean_id)
 
-#from PIL import Image  # Pillow for handling image processing
+# Function to handle poster selection and download, including thumbnail creation
+def save_poster_and_thumbnail(poster_path, movie_title, save_dir):
+    # Define the full-res and thumbnail file paths
+    full_poster_path = os.path.join(save_dir, 'poster.jpg')
+    thumb_poster_path = os.path.join(save_dir, 'poster-thumb.jpg')
 
-# Route for handling poster selection and downloading
-from PIL import Image
+    try:
+        # Download the full-resolution poster
+        poster_data = requests.get(poster_path).content
+        with open(full_poster_path, 'wb') as file:
+            file.write(poster_data)
 
-# Route for handling poster selection and downloading
+        # Open the downloaded poster and generate the thumbnail
+        with Image.open(full_poster_path) as img:
+            # Create a thumbnail with a max size of 300x450
+            img.thumbnail((300, 450))
+
+            # Save the thumbnail
+            img.save(thumb_poster_path)
+
+        print(f"Thumbnail saved successfully at {thumb_poster_path}")
+
+    except Exception as e:
+        print(f"Error generating thumbnail for {movie_title}: {e}")
+
+# Existing function in app.py for selecting and downloading the poster
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
     # Get the selected poster path and movie title from the form submission
@@ -207,51 +227,20 @@ def select_poster():
         similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
         return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_path)
 
-    # Define the new poster's save path with the .jpg extension
-    save_path = os.path.join(save_dir, 'poster.jpg')
-
     # Remove any existing poster files with .jpg, .jpeg, or .png extensions
     for ext in ['jpg', 'jpeg', 'png']:
         for file in os.listdir(save_dir):
-            if file.lower() == f'poster.{ext}' or file.lower() == f'poster-thumb.{ext}':  # Make comparison case-insensitive
-                os.remove(os.path.join(save_dir, file))  # Delete the existing poster and thumbnail files
+            if file.lower() == f'poster.{ext}' or file.lower() == f'poster-thumb.{ext}':
+                os.remove(os.path.join(save_dir, file))  # Delete the existing poster or thumbnail file
 
-    # Download and save the full-resolution poster
-    poster_data = requests.get(poster_path).content
-    with open(save_path, 'wb') as file:
-        file.write(poster_data)
-
-    # Create a thumbnail from the downloaded poster (300x450)
-    try:
-        with Image.open(save_path) as img:
-            img.thumbnail((300, 450))  # Resize image to 300x450
-            thumb_save_path = os.path.join(save_dir, 'poster-thumb.jpg')  # Save thumbnail as poster-thumb.jpg
-            img.save(thumb_save_path)  # Save the thumbnail
-            print(f"Thumbnail saved to {thumb_save_path}")
-    except Exception as e:
-        print(f"Error generating thumbnail: {e}")
+    # Save the full-resolution poster and generate the thumbnail
+    save_poster_and_thumbnail(poster_path, movie_title, save_dir)
 
     # Create anchor using generate_clean_id
-    anchor = generate_clean_id(movie_title)
-
-    # Send notification to Slack (if applicable)
-    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
-    if slack_webhook_url:
-        message = {
-            "text": f"Poster for '{movie_title}' has been downloaded and saved!",
-            "attachments": [
-                {
-                    "text": f"Saved To\n{save_path}",
-                    "image_url": poster_path
-                }
-            ]
-        }
-        requests.post(slack_webhook_url, json=message)
+    clean_id = generate_clean_id(movie_title)
 
     # Redirect back to the index page with an anchor to the selected movie
-    return redirect(url_for('index') + f"#{anchor}")
-
-
+    return redirect(url_for('index') + f"#{clean_id}")
 
 # Helper function to create a thumbnail
 def create_thumbnail(poster_path, save_dir):
