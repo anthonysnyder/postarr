@@ -3,27 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Page title dynamically set based on the selected movie -->
     <title>Select a Poster for "{{ movie_title }}"</title>
+    <!-- Bootstrap for styling -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* Specific style to ensure text in the card body is black */
         .card-body p {
             color: #000; /* Change text color to black */
         }
     </style>
 </head>
-<body class="bg-dark text-light">
+<body class="bg-dark text-light"> <!-- Dark background for the body and light text color -->
     <div class="container">
+        <!-- Page heading dynamically displays the movie title for which posters are being selected -->
         <h1 class="text-center my-4">Select a Poster for "{{ movie_title }}"</h1>
         <div class="row">
+            <!-- Loop through each poster and display it in a grid layout with Bootstrap's column system -->
             {% for poster in posters %}
-            <div class="col-md-3">
-                <div class="card mb-4">
+            <div class="col-md-3"> <!-- Each poster takes up 3/12 columns, meaning 4 posters per row -->
+                <div class="card mb-4"> <!-- Card component to display poster and details -->
+                    <!-- Display the poster image -->
                     <img src="{{ poster.url }}" class="card-img-top" alt="Poster">
-                    <div class="card-body text-center" style="background-color: #f8f9fa;"> <!-- Lighter background -->
+                    <!-- Card body contains the poster details and the form for selection -->
+                    <div class="card-body text-center" style="background-color: #f8f9fa;"> <!-- Light background for contrast -->
+                        <!-- Display the size and language of the poster -->
                         <p class="card-text">{{ poster.size }} - {{ poster.language }}</p>
+                        <!-- Form to submit the selected poster -->
                         <form action="{{ url_for('select_poster') }}" method="POST">
+                            <!-- Hidden input to store the selected poster's URL -->
                             <input type="hidden" name="poster_path" value="{{ poster.url }}">
+                            <!-- Hidden input to store the movie title -->
                             <input type="hidden" name="movie_title" value="{{ movie_title }}">
+                            <!-- Button to submit the form and select the poster -->
                             <button type="submit" class="btn btn-primary">Select Poster</button>
                         </form>
                     </div>
