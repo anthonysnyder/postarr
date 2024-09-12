@@ -5,10 +5,14 @@ Welcome to Postarr, a Flask-based application designed to automatically scrape y
 
 ## Features
 
-	•	Automated Poster Downloading: Automatically fetch posters from TMDb based on your movie directory.
+	• Automated Poster Downloading: Automatically fetch posters from TMDb based on your movie directory.
 	•	Multi-Directory Support: Seamlessly manage multiple movie directories.
 	•	Slack Integration (Optional): Get notified instantly in your Slack channel when a poster is downloaded.
 	•	Docker Compatible: Built with Docker in mind, especially for Synology NAS.
+  •	Movie Collection Dashboard: View all movies in your collection, displayed with their corresponding posters.
+	• Search Functionality: Search for movies directly from TMDb based on user input.
+  • Poster Update Select from multiple available posters and update missing or low-resolution posters for your movies.
+	•	Smooth Scrolling with Anchors**: Automatically scroll to the selected movie in the movie list after a poster update.
 
 ## Prerequisites
 
