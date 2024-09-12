@@ -207,27 +207,27 @@ def select_poster():
         similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
         return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_path)
 
-    # Define the new poster's save path for full-res and thumbnail
-    full_res_path = os.path.join(save_dir, 'poster.jpg')
-    thumb_res_path = os.path.join(save_dir, 'poster-thumb.jpg')
+    # Define the new poster's save path with the .jpg extension
+    save_path = os.path.join(save_dir, 'poster.jpg')
 
     # Remove any existing poster files with .jpg, .jpeg, or .png extensions
     for ext in ['jpg', 'jpeg', 'png']:
         for file in os.listdir(save_dir):
-            if file.lower() in [f'poster.{ext}', f'poster-thumb.{ext}']:  # Make comparison case-insensitive
-                os.remove(os.path.join(save_dir, file))  # Delete the existing poster file
+            if file.lower() == f'poster.{ext}' or file.lower() == f'poster-thumb.{ext}':  # Make comparison case-insensitive
+                os.remove(os.path.join(save_dir, file))  # Delete the existing poster and thumbnail files
 
     # Download and save the full-resolution poster
     poster_data = requests.get(poster_path).content
-    with open(full_res_path, 'wb') as file:
+    with open(save_path, 'wb') as file:
         file.write(poster_data)
 
-    # Create and save the thumbnail
+    # Create a thumbnail from the downloaded poster (300x450)
     try:
-        with Image.open(full_res_path) as img:
-            # Resize the image to 300x450
-            img.thumbnail((300, 450))
-            img.save(thumb_res_path, "JPEG")
+        with Image.open(save_path) as img:
+            img.thumbnail((300, 450))  # Resize image to 300x450
+            thumb_save_path = os.path.join(save_dir, 'poster-thumb.jpg')  # Save thumbnail as poster-thumb.jpg
+            img.save(thumb_save_path)  # Save the thumbnail
+            print(f"Thumbnail saved to {thumb_save_path}")
     except Exception as e:
         print(f"Error generating thumbnail: {e}")
 
@@ -250,6 +250,7 @@ def select_poster():
 
     # Redirect back to the index page with an anchor to the selected movie
     return redirect(url_for('index') + f"#{anchor}")
+
 
 
 # Helper function to create a thumbnail
