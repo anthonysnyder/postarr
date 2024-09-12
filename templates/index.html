@@ -161,13 +161,19 @@
     setTimeout(() => {
         const hash = window.location.hash;
         if (hash) {
-            const anchor = hash.slice(1);  // Get anchor without '#'
+            let anchor = hash.slice(1);  // Get anchor without '#'
             console.log(`Navigating to anchor: ${anchor}`);
             
             try {
                 // Check and log all IDs present in the document
-                const allIds = Array.from(document.querySelectorAll("[id]")).map(el => el.id);
+                const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
                 console.log("Available IDs on the page:", allIds);
+
+                // Check if anchor exists, otherwise correct to the closest match with year
+                if (!allIds.includes(anchor)) {
+                    console.log(`Correcting anchor to: ${allIds.find(id => id.startsWith(anchor))}`);
+                    anchor = allIds.find(id => id.startsWith(anchor)); // Correct anchor to match ID with year
+                }
 
                 const targetElement = document.getElementById(anchor);
 
