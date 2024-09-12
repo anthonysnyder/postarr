@@ -62,16 +62,22 @@ def get_poster_thumbnails():
             # Check if the path is a directory (i.e., a movie directory)
             if os.path.isdir(movie_path):
                 poster = None
+                poster_thumb = None  # Initialize thumbnail poster
                 poster_dimensions = None  # Initialize poster dimensions
                 poster_last_modified = None  # Initialize last modified date
 
-                # Look for an existing poster in the directory
+                # Look for an existing thumbnail in the directory
                 for ext in ['jpg', 'jpeg', 'png']:
+                    thumb_path = os.path.join(movie_path, f"poster-thumb.{ext}")
                     poster_path = os.path.join(movie_path, f"poster.{ext}")
+                    if os.path.exists(thumb_path):
+                        # Generate the thumbnail URL using the /poster/ route
+                        poster_thumb = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster-thumb.{ext}"
+                    
                     if os.path.exists(poster_path):
-                        # Generate the poster URL using the /poster/ route
+                        # Generate the full poster URL
                         poster = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster.{ext}"
-
+                        
                         # Extract poster dimensions using Pillow
                         try:
                             with Image.open(poster_path) as img:
@@ -83,7 +89,6 @@ def get_poster_thumbnails():
                         # Get the last modified time of the poster and format only the date
                         timestamp = os.path.getmtime(poster_path)
                         poster_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')  # Only date
-                        
                         break
 
                 # Generate clean ID for the movie
@@ -93,6 +98,7 @@ def get_poster_thumbnails():
                 movies.append({
                     'title': original_movie_dir,
                     'poster': poster,
+                    'poster_thumb': poster_thumb,  # Add the thumbnail poster
                     'poster_dimensions': poster_dimensions,  # Add poster dimensions
                     'poster_last_modified': poster_last_modified,  # Add last modified date (only date)
                     'clean_id': clean_id  # Add the clean ID for the movie
@@ -168,6 +174,8 @@ def select_movie(movie_id):
     # Render the poster selection page with the sorted posters and clean_id
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title, clean_id=clean_id)
 
+#from PIL import Image  # Pillow for handling image processing
+
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
@@ -210,25 +218,48 @@ def select_poster():
     with open(save_path, 'wb') as file:
         file.write(poster_data)
 
-        # Create anchor using generate_clean_id
-    clean_id = generate_clean_id(movie_title)  # Generate a clean ID using the movie title to ensure it’s URL-safe
+    # Create the thumbnail and save it as poster-thumb.ext
+    create_thumbnail(save_path, save_dir)
+
+    # Create anchor using generate_clean_id
+    clean_id = generate_clean_id(movie_title)
 
     # Send notification to Slack (if applicable)
-    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')  # Fetch the Slack webhook URL from environment variables
+    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
     if slack_webhook_url:
         message = {
-            "text": f"Poster for '{movie_title}' has been downloaded and saved!",  # Message to be sent to Slack
+            "text": f"Poster for '{movie_title}' has been downloaded and saved!",
             "attachments": [
                 {
-                    "text": f"Saved To\n{save_path}",  # Include the location where the poster was saved
-                    "image_url": poster_path  # Attach the poster image URL
+                    "text": f"Saved To\n{save_path}",
+                    "image_url": poster_path
                 }
             ]
         }
-        requests.post(slack_webhook_url, json=message)  # Send the message to Slack
+        requests.post(slack_webhook_url, json=message)
 
     # Redirect back to the index page with an anchor to the selected movie
-    return redirect(url_for('index') + f"#{clean_id}")  # Redirect to the index page and append the clean_id to the URL hash for scrolling to the movie
+    return redirect(url_for('index') + f"#{clean_id}")
+
+# Helper function to create a thumbnail
+def create_thumbnail(poster_path, save_dir):
+    try:
+        # Open the original poster image
+        with Image.open(poster_path) as img:
+            # Define the size for the thumbnail
+            thumbnail_size = (300, 450)
+
+            # Create the thumbnail
+            img.thumbnail(thumbnail_size)
+
+            # Define the path for the thumbnail (poster-thumb.jpg)
+            thumbnail_path = os.path.join(save_dir, 'poster-thumb.jpg')
+
+            # Save the thumbnail
+            img.save(thumbnail_path)
+
+    except Exception as e:
+        print(f"Error generating thumbnail: {e}")
 
 # Route for confirming the directory and saving the poster
 @app.route('/confirm_directory', methods=['POST'])
