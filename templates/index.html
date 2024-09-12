@@ -123,7 +123,7 @@
                         {% if movie.poster %}
                         <!-- Display the poster if available -->
                         <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
-                             alt="{{ movie.title }}" class="movie-poster" loading="lazy" onclick="triggerSearch('{{ movie.clean_id }}')">
+                             alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.clean_id }}')">
                         {% else %}
                         <!-- Display a placeholder if no poster is available -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
