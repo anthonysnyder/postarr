@@ -163,37 +163,38 @@
         }
     }
 
-    // Scroll to anchor once the page has fully loaded
-    window.onload = function() {
-        setTimeout(() => {
-            const hash = window.location.hash;
-            if (hash) {
-                let anchor = hash.slice(1);  // Get anchor without '#'
-                console.log(`Navigating to anchor: ${anchor}`);
-                
-                try {
-                    // Check all movie-card IDs on the page
-                    const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
+// Scroll to anchor once the page has fully loaded
+window.onload = function() {
+    setTimeout(() => {
+        const hash = window.location.hash;
+        if (hash) {
+            let anchor = hash.slice(1);  // Get anchor without '#'
+            console.log(`Navigating to anchor: ${anchor}`);
+            
+            try {
+                // Check all movie-card IDs on the page
+                const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
 
-                    // Correct anchor to match ID with year if it doesn't directly match
-                    if (!allIds.includes(anchor)) {
-                        anchor = allIds.find(id => id.startsWith(anchor));
-                    }
-
-                    const targetElement = document.getElementById(anchor);
-
-                    if (targetElement) {
-                        console.log(`Found element with ID: ${anchor}`);
-                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                        console.error(`Element with ID "${anchor}" not found.`);
-                    }
-                } catch (error) {
-                    console.error(`Error occurred while navigating to anchor: ${error.message}`);
+                // Correct anchor to match ID with year if it doesn't directly match
+                if (!allIds.includes(anchor)) {
+                    anchor = allIds.find(id => id.startsWith(anchor));
                 }
+
+                const targetElement = document.getElementById(anchor);
+
+                if (targetElement) {
+                    console.log(`Found element with ID: ${anchor}`);
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    console.error(`Element with ID "${anchor}" not found.`);
+                }
+            } catch (error) {
+                console.error(`Error occurred while navigating to anchor: ${error.message}`);
             }
-        }, 500);  // Delay to ensure the page fully renders before scrolling
-    };
+        }
+    }, 500);  // Delay to ensure the page fully renders before scrolling
+};
+
 
     // Function to show only movies without posters
     function showMoviesWithoutPoster() {
