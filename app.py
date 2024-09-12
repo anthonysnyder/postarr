@@ -177,6 +177,9 @@ def select_movie(movie_id):
 #from PIL import Image  # Pillow for handling image processing
 
 # Route for handling poster selection and downloading
+from PIL import Image
+
+# Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
     # Get the selected poster path and movie title from the form submission
@@ -204,25 +207,32 @@ def select_poster():
         similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
         return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_path)
 
-    # Define the new poster's save path with the .jpg extension
-    save_path = os.path.join(save_dir, 'poster.jpg')
+    # Define the new poster's save path for full-res and thumbnail
+    full_res_path = os.path.join(save_dir, 'poster.jpg')
+    thumb_res_path = os.path.join(save_dir, 'poster-thumb.jpg')
 
     # Remove any existing poster files with .jpg, .jpeg, or .png extensions
     for ext in ['jpg', 'jpeg', 'png']:
         for file in os.listdir(save_dir):
-            if file.lower() == f'poster.{ext}':  # Make comparison case-insensitive
+            if file.lower() in [f'poster.{ext}', f'poster-thumb.{ext}']:  # Make comparison case-insensitive
                 os.remove(os.path.join(save_dir, file))  # Delete the existing poster file
 
-    # Download and save the new poster (which will overwrite or replace the old one)
+    # Download and save the full-resolution poster
     poster_data = requests.get(poster_path).content
-    with open(save_path, 'wb') as file:
+    with open(full_res_path, 'wb') as file:
         file.write(poster_data)
 
-    # Create the thumbnail and save it as poster-thumb.ext
-    create_thumbnail(save_path, save_dir)
+    # Create and save the thumbnail
+    try:
+        with Image.open(full_res_path) as img:
+            # Resize the image to 300x450
+            img.thumbnail((300, 450))
+            img.save(thumb_res_path, "JPEG")
+    except Exception as e:
+        print(f"Error generating thumbnail: {e}")
 
     # Create anchor using generate_clean_id
-    clean_id = generate_clean_id(movie_title)
+    anchor = generate_clean_id(movie_title)
 
     # Send notification to Slack (if applicable)
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
@@ -239,7 +249,8 @@ def select_poster():
         requests.post(slack_webhook_url, json=message)
 
     # Redirect back to the index page with an anchor to the selected movie
-    return redirect(url_for('index') + f"#{clean_id}")
+    return redirect(url_for('index') + f"#{anchor}")
+
 
 # Helper function to create a thumbnail
 def create_thumbnail(poster_path, save_dir):
