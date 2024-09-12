@@ -3,20 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Page title for search results -->
     <title>Search Results</title>
+    <!-- Bootstrap for styling -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
     <div class="container">
+        <!-- Heading displaying the search query -->
         <h1 class="my-4">Search Results for "{{ query }}"</h1>
         <div class="list-group">
+            <!-- Loop through each result from the search results -->
             {% for result in results %}
-                <!-- Use clean_id for anchor links and IDs -->
+                <!-- Link to select a movie, using result.clean_id for an anchor and unique ID -->
                 <a href="{{ url_for('select_movie', movie_id=result.id) }}" id="{{ result.clean_id }}" class="list-group-item list-group-item-action">
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center"> <!-- Align poster and title next to each other -->
+                        <!-- Check if the result has a poster path -->
                         {% if result.poster_path %}
+                            <!-- Display a small poster image -->
                             <img src="https://image.tmdb.org/t/p/w92{{ result.poster_path }}" alt="{{ result.title }}" class="mr-3">
                         {% endif %}
+                        <!-- Display the movie title and release year (if available) -->
                         <h5>{{ result.title }} ({{ result.release_date[:4] if result.release_date else 'N/A' }})</h5>
                     </div>
                 </a>
