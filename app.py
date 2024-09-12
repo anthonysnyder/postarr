@@ -39,22 +39,10 @@ def strip_leading_the(title):
         return title[4:]  # Remove "The " (4 characters)
     return title
 
-# Function to normalize the movie title for consistent search queries
-def normalize_title(title):
-    return title.lower().replace("'", "").replace("-", "").replace(":", "").replace("&", "and").strip()
-
-# Helper function to remove leading "The " for sorting purposes
-def strip_leading_the(title):
-    if title.lower().startswith("the "):
-        return title[4:]  # Remove "The " (4 characters)
-    return title
-
 # Function to generate a clean, anchor-safe ID from the movie title
 def generate_clean_id(title):
-    # Replace all non-alphanumeric characters with dashes
     clean_id = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
     return clean_id
-
 
 # Function to retrieve movie directories and their associated posters (thumbnails) for the index page
 def get_poster_thumbnails():
@@ -114,22 +102,11 @@ def get_poster_thumbnails():
 
     # Return the sorted list of movies and the total count
     return movies_sorted, len(movies_sorted)
-    
-
-    # Sort the movies globally by title, ignoring "The" when sorting
-    movies_sorted = sorted(movies, key=lambda x: strip_leading_the(x['title'].lower()))
-
-
-    # Return the sorted list of movies and the total count
-    return movies_sorted, len(movies_sorted)
 
 # Route for the index page
 @app.route('/')
 def index():
-    # Fetch the list of movies and their posters
     movies, total_movies = get_poster_thumbnails()  # Now returns both movies and the count
-    
-        # Render the index page with the movie data and total count
     return render_template('index.html', movies=movies, total_movies=total_movies)
 
 # Route to refresh index.html
@@ -141,54 +118,34 @@ def refresh():
 # Route for searching movies using TMDb API
 @app.route('/search', methods=['GET'])
 def search_movie():
-    # Get the query string from the URL parameters
     query = request.args.get('query', '')
-    
-    # Normalize the search query (this will act as normalized_movie_dir)
     normalized_movie_dir = normalize_title(query)
-    
-    # Make a request to the TMDb API to search for movies
     response = requests.get(f"{BASE_URL}/search/movie", params={"api_key": TMDB_API_KEY, "query": normalized_movie_dir})
     results = response.json().get('results', [])
-    
-    # Normalize TMDb titles using generate_clean_id
+
     for result in results:
         result['clean_id'] = generate_clean_id(result['title'])  # Apply the same normalization as folder names
 
-    # Render the search results page with the movies found
     return render_template('search_results.html', query=query, results=results)
-
 
 # Route for selecting a movie and displaying available posters
 @app.route('/select_movie/<int:movie_id>', methods=['GET'])
 def select_movie(movie_id):
-    # Request details of the selected movie from TMDb API
     movie_details = requests.get(f"{BASE_URL}/movie/{movie_id}", params={"api_key": TMDB_API_KEY}).json()
-    
-    # Extract the movie title from the details and generate clean_id
     movie_title = movie_details.get('title', '')
-    clean_id = generate_clean_id(movie_title)  # Normalize title for clean IDs
-    
-    # Request available posters for the selected movie
+    clean_id = generate_clean_id(movie_title)
+
     posters = requests.get(f"{BASE_URL}/movie/{movie_id}/images", params={"api_key": TMDB_API_KEY}).json().get('posters', [])
-    
-    # Filter posters to only include English ones
     posters = [poster for poster in posters if poster['iso_639_1'] == 'en']
-    
-    # Sort posters by resolution (width * height)
+
     def poster_resolution(poster):
         dimensions = poster['width'], poster['height']
         return dimensions[0] * dimensions[1]  # Calculate the area of the poster
-    
-    posters_sorted = sorted(posters, key=poster_resolution, reverse=True)  # Sort by area in descending order
 
-    # Format the poster URLs for display
+    posters_sorted = sorted(posters, key=poster_resolution, reverse=True)
     posters = [{'url': f"{POSTER_BASE_URL}{poster['file_path']}", 'size': f"{poster['width']}x{poster['height']}", 'language': poster['iso_639_1']} for poster in posters_sorted]
 
-    # Render the poster selection page with the sorted posters and clean_id
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title, clean_id=clean_id)
-
-import os
 
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
@@ -233,7 +190,7 @@ def select_poster():
         file.write(poster_data)
 
     # Create anchor using generate_clean_id
-    anchor = generate_clean_id(movie_title)
+    clean_id = generate_clean_id(movie_title)
 
     # Send notification to Slack (if applicable)
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
@@ -250,16 +207,15 @@ def select_poster():
         requests.post(slack_webhook_url, json=message)
 
     # Redirect back to the index page with an anchor to the selected movie
-    return redirect(url_for('index') + f"#{anchor}")
+    return redirect(url_for('index') + f"#{clean_id}")
 
 # Route for confirming the directory and saving the poster
 @app.route('/confirm_directory', methods=['POST'])
 def confirm_directory():
-    # Get the selected directory and other details from the form submission
     selected_directory = request.form['selected_directory']
     movie_title = request.form['movie_title']
     poster_path = request.form['poster_path']
-    
+
     # Construct the save directory path
     for base_folder in base_folders:
         if selected_directory in os.listdir(base_folder):
@@ -274,21 +230,10 @@ def confirm_directory():
     with open(save_path, 'wb') as file:
         file.write(poster_data)
 
-    # Send notification to Slack
-    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
-    if slack_webhook_url:
-        message = {
-            "text": f"Poster for '{movie_title}' has been downloaded!",
-            "attachments": [
-                {
-                    "text": f"Saved To\n{save_path}",
-                    "image_url": poster_path
-                }
-            ]
-        }
-        requests.post(slack_webhook_url, json=message)
+    # Generate clean_id for the anchor
+    anchor = generate_clean_id(movie_title)
 
-    anchor = generate_clean_id(movie_title)  # Use the function to generate the clean ID
+    # Redirect back to the index page with an anchor to the selected movie
     return redirect(url_for('index') + f"#{anchor}")
 
 # Route for serving posters
@@ -297,12 +242,10 @@ def serve_poster(filename):
     refresh = request.args.get('refresh', 'false')  # Check if refresh is requested
     for base_folder in base_folders:
         full_path = os.path.join(base_folder, filename)
-        # Ignore files within @eaDir
         if '@eaDir' in full_path:
             continue
         if os.path.exists(full_path):
             response = send_from_directory(base_folder, filename)
-            
             if refresh == 'true':
                 # If refresh is requested, don't use caching
                 response.cache_control.no_cache = True

@@ -118,19 +118,18 @@
                     <div>
                         {% if movie.poster %}
                         <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
-                             alt="{{ movie.title }}" class="movie-poster" loading="lazy" onclick="triggerSearch('{{ movie.title }}')">
+                             alt="{{ movie.title }}" class="movie-poster" loading="lazy" onclick="triggerSearch('{{ movie.clean_id }}')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.clean_id }}')">{{ movie.title }}</h5>
                     <p class="poster-dimensions text-center">
                         Dimensions: {{ movie.poster_dimensions }} | 
                         <strong>Last Modified:</strong> {{ movie.poster_last_modified }}<br>
-                        <!-- TEMPORARY PRINT OF CLEAN ID -->
-                        <strong>Generated ID:</strong> {{ movie.clean_id }} <!-- Added this line to print clean_id -->
+                        <strong>Generated ID:</strong> {{ movie.clean_id }} <!-- Print clean_id for debugging -->
                     </p>
                 </div>
                 {% endfor %}
