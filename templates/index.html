@@ -90,6 +90,7 @@
         <div class="container-fluid">
             <h1 class="my-4">Dashboard</h1>
             <div class="row">
+                <!-- Displays the total number of movies -->
                 <div class="col-lg-3 col-md-6">
                     <div class="card bg-light text-dark mb-4">
                         <div class="card-body">
@@ -102,6 +103,7 @@
 
             <h1 class="my-4">My Movie Collection</h1>
             
+            <!-- Input field for searching movies -->
             <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
                 <button class="btn btn-primary" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
@@ -112,19 +114,24 @@
                 <button class="btn btn-warning" onclick="refreshPosters()">Refresh Posters</button>
             </div>
             
+            <!-- Movie grid displaying all movies -->
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
+                <!-- Movie card with the clean_id used as the element ID -->
                 <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}">
                     <div>
                         {% if movie.poster %}
+                        <!-- Display the poster if available -->
                         <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
                              alt="{{ movie.title }}" class="movie-poster" loading="lazy" onclick="triggerSearch('{{ movie.clean_id }}')">
                         {% else %}
+                        <!-- Display a placeholder if no poster is available -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
+                    <!-- Display the movie title and attach the clean ID for scrolling/search purposes -->
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.clean_id }}')">{{ movie.title }}</h5>
                     <p class="poster-dimensions text-center">
                         Dimensions: {{ movie.poster_dimensions }} | 
@@ -144,6 +151,7 @@
         return true;
     };
 
+    // Function to trigger a movie search
     function triggerSearch(title) {
         console.log("Clicked on:", title);
         try {
@@ -155,40 +163,39 @@
         }
     }
 
-    // Scroll once the page has fully loaded
+    // Scroll to anchor once the page has fully loaded
     window.onload = function() {
-    setTimeout(() => {
-        const hash = window.location.hash;
-        if (hash) {
-            let anchor = hash.slice(1);  // Get anchor without '#'
-            console.log(`Navigating to anchor: ${anchor}`);
-            
-            try {
-                // Check and log all IDs present in the document
-                const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
-                console.log("Available IDs on the page:", allIds);
+        setTimeout(() => {
+            const hash = window.location.hash;
+            if (hash) {
+                let anchor = hash.slice(1);  // Get anchor without '#'
+                console.log(`Navigating to anchor: ${anchor}`);
+                
+                try {
+                    // Check all movie-card IDs on the page
+                    const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
 
-                // Check if anchor exists, otherwise correct to the closest match with year
-                if (!allIds.includes(anchor)) {
-                    console.log(`Correcting anchor to: ${allIds.find(id => id.startsWith(anchor))}`);
-                    anchor = allIds.find(id => id.startsWith(anchor)); // Correct anchor to match ID with year
+                    // Correct anchor to match ID with year if it doesn't directly match
+                    if (!allIds.includes(anchor)) {
+                        anchor = allIds.find(id => id.startsWith(anchor));
+                    }
+
+                    const targetElement = document.getElementById(anchor);
+
+                    if (targetElement) {
+                        console.log(`Found element with ID: ${anchor}`);
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        console.error(`Element with ID "${anchor}" not found.`);
+                    }
+                } catch (error) {
+                    console.error(`Error occurred while navigating to anchor: ${error.message}`);
                 }
-
-                const targetElement = document.getElementById(anchor);
-
-                if (targetElement) {
-                    console.log(`Found element with ID: ${anchor}`);
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    console.error(`Element with ID "${anchor}" not found.`);
-                }
-            } catch (error) {
-                console.error(`Error occurred while navigating to anchor: ${error.message}`);
             }
-        }
-    }, 500);  // Delay to ensure page fully renders before scrolling
-};
+        }, 500);  // Delay to ensure the page fully renders before scrolling
+    };
 
+    // Function to show only movies without posters
     function showMoviesWithoutPoster() {
         console.log('Showing movies without posters.');
         const movies = document.querySelectorAll('#movieList .movie-card');
@@ -202,11 +209,13 @@
         });
     }
 
+    // Function to show all movies
     function showAllMovies() {
         console.log('Showing all movies.');
         window.location.href = `/`;
     }
 
+    // Search function to filter movies based on user input
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const movies = document.querySelectorAll('#movieList .movie-card');
@@ -221,6 +230,7 @@
         });
     });
 
+    // Trigger search when movie card is clicked
     document.querySelectorAll('.movie-card').forEach(item => {
         item.addEventListener('click', event => {
             const title = item.querySelector('h5').textContent;
