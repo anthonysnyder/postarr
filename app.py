@@ -4,7 +4,7 @@ import re
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from difflib import get_close_matches
-from PIL import Image  # Import Pillow to work with images
+from PIL import Image
 from datetime import datetime
 
 app = Flask(__name__)
@@ -176,30 +176,56 @@ def select_movie(movie_id):
 
 # Function to handle poster selection and download, including thumbnail creation
 def save_poster_and_thumbnail(poster_path, movie_title, save_dir):
-    # Define the full-res and thumbnail file paths
     full_poster_path = os.path.join(save_dir, 'poster.jpg')
     thumb_poster_path = os.path.join(save_dir, 'poster-thumb.jpg')
 
     try:
+        # Delete existing poster files
+        for ext in ['jpg', 'jpeg', 'png']:
+            existing_poster = os.path.join(save_dir, f'poster.{ext}')
+            existing_thumb = os.path.join(save_dir, f'poster-thumb.{ext}')
+            if os.path.exists(existing_poster):
+                os.remove(existing_poster)
+            if os.path.exists(existing_thumb):
+                os.remove(existing_thumb)
+
         # Download the full-resolution poster
-        poster_data = requests.get(poster_path).content
-        with open(full_poster_path, 'wb') as file:
-            file.write(poster_data)
+        response = requests.get(poster_path)
+        if response.status_code == 200:
+            with open(full_poster_path, 'wb') as file:
+                file.write(response.content)
 
-        # Open the downloaded poster and generate the thumbnail
-        with Image.open(full_poster_path) as img:
-            # Create a thumbnail with a max size of 300x450
-            img.thumbnail((300, 450))
+            # Create the thumbnail
+            with Image.open(full_poster_path) as img:
+                # Calculate aspect ratio
+                aspect_ratio = img.width / img.height
+                target_ratio = 300 / 450
 
-            # Save the thumbnail
-            img.save(thumb_poster_path)
+                if aspect_ratio > target_ratio:
+                    # Image is wider, crop the sides
+                    new_width = int(img.height * target_ratio)
+                    left = (img.width - new_width) // 2
+                    img = img.crop((left, 0, left + new_width, img.height))
+                else:
+                    # Image is taller, crop the top and bottom
+                    new_height = int(img.width / target_ratio)
+                    top = (img.height - new_height) // 2
+                    img = img.crop((0, top, img.width, top + new_height))
 
-        print(f"Thumbnail saved successfully at {thumb_poster_path}")
+                # Resize to 300x450
+                img = img.resize((300, 450), Image.LANCZOS)
+                
+                # Save the thumbnail
+                img.save(thumb_poster_path, "JPEG", quality=90)
+
+            print(f"Poster and thumbnail saved successfully for {movie_title}")
+        else:
+            print(f"Failed to download poster for {movie_title}. Status code: {response.status_code}")
 
     except Exception as e:
-        print(f"Error generating thumbnail for {movie_title}: {e}")
+        print(f"Error saving poster and generating thumbnail for {movie_title}: {e}")
 
-# Existing function in app.py for selecting and downloading the poster
+# Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
     # Get the selected poster path and movie title from the form submission
@@ -227,12 +253,6 @@ def select_poster():
         similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
         return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_path)
 
-    # Remove any existing poster files with .jpg, .jpeg, or .png extensions
-    for ext in ['jpg', 'jpeg', 'png']:
-        for file in os.listdir(save_dir):
-            if file.lower() == f'poster.{ext}' or file.lower() == f'poster-thumb.{ext}':
-                os.remove(os.path.join(save_dir, file))  # Delete the existing poster or thumbnail file
-
     # Save the full-resolution poster and generate the thumbnail
     save_poster_and_thumbnail(poster_path, movie_title, save_dir)
 
@@ -241,54 +261,6 @@ def select_poster():
 
     # Redirect back to the index page with an anchor to the selected movie
     return redirect(url_for('index') + f"#{clean_id}")
-
-# Helper function to create a thumbnail
-def create_thumbnail(poster_path, save_dir):
-    try:
-        # Open the original poster image
-        with Image.open(poster_path) as img:
-            # Define the size for the thumbnail
-            thumbnail_size = (300, 450)
-
-            # Create the thumbnail
-            img.thumbnail(thumbnail_size)
-
-            # Define the path for the thumbnail (poster-thumb.jpg)
-            thumbnail_path = os.path.join(save_dir, 'poster-thumb.jpg')
-
-            # Save the thumbnail
-            img.save(thumbnail_path)
-
-    except Exception as e:
-        print(f"Error generating thumbnail: {e}")
-
-# Route for confirming the directory and saving the poster
-@app.route('/confirm_directory', methods=['POST'])
-def confirm_directory():
-    # Get the selected directory and other details from the form submission
-    selected_directory = request.form['selected_directory']  # The directory selected by the user
-    movie_title = request.form['movie_title']  # The movie title submitted from the form
-    poster_path = request.form['poster_path']  # The poster URL submitted from the form
-    
-    # Construct the save directory path based on the selected directory
-    for base_folder in base_folders:
-        if selected_directory in os.listdir(base_folder):  # Check if the selected directory exists in the base folder
-            save_dir = os.path.join(base_folder, selected_directory)  # Build the full path for the selected directory
-            break
-
-    # Define the full path for saving the poster in the selected directory
-    save_path = os.path.join(save_dir, 'poster.jpg')  # The poster file will always be saved as poster.jpg
-
-    # Download and save the poster file from the provided URL
-    poster_data = requests.get(poster_path).content  # Download the poster image from the provided URL
-    with open(save_path, 'wb') as file:  # Open the save path in write-binary mode
-        file.write(poster_data)  # Save the poster data to the file
-
-    # Generate clean_id for the anchor
-    anchor = generate_clean_id(movie_title)  # Generate a clean anchor ID for the movie title
-
-    # Redirect back to the index page with an anchor to the selected movie
-    return redirect(url_for('index') + f"#{anchor}")  # Redirect to the index page with the anchor (clean_id)
 
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
@@ -313,6 +285,29 @@ def serve_poster(filename):
                 
             return response  # Return the response with the file
     return "File not found", 404  # If the file doesn't exist, return a 404 error
+
+# Route for confirming the directory and saving the poster
+@app.route('/confirm_directory', methods=['POST'])
+def confirm_directory():
+    # Get the selected directory and other details from the form submission
+    selected_directory = request.form['selected_directory']  # The directory selected by the user
+    movie_title = request.form['movie_title']  # The movie title submitted from the form
+    poster_path = request.form['poster_path']  # The poster URL submitted from the form
+    
+    # Construct the save directory path based on the selected directory
+    for base_folder in base_folders:
+        if selected_directory in os.listdir(base_folder):  # Check if the selected directory exists in the base folder
+            save_dir = os.path.join(base_folder, selected_directory)  # Build the full path for the selected directory
+            break
+
+    # Save the full-resolution poster and generate the thumbnail
+    save_poster_and_thumbnail(poster_path, movie_title, save_dir)
+
+    # Generate clean_id for the anchor
+    anchor = generate_clean_id(movie_title)  # Generate a clean anchor ID for the movie title
+
+    # Redirect back to the index page with an anchor to the selected movie
+    return redirect(url_for('index') + f"#{anchor}")  # Redirect to the index page with the anchor (clean_id)
 
 # Route for refreshing index.html
 @app.route('/refresh')

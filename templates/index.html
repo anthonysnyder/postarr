@@ -120,11 +120,10 @@
                 <!-- Movie card with the clean_id used as the element ID -->
                 <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}">
                     <div>
-                        {% if movie.poster %}
-                      <!-- Display the poster thumbnail if available -->
-                    <img src="{{ movie.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
-                         alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.clean_id }}')">
-
+                        {% if movie.poster_thumb %}
+                        <!-- Display the thumbnail if available -->
+                        <img src="{{ movie.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
+                             alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.clean_id }}')">
                         {% else %}
                         <!-- Display a placeholder if no poster is available -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
@@ -132,13 +131,14 @@
                         </div>
                         {% endif %}
                     </div>
-                    <!-- Display the movie title and attach the clean ID for scrolling/search purposes -->
+                    <!-- Display movie details -->
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.clean_id }}')">{{ movie.title }}</h5>
                     <p class="poster-dimensions text-center">
                         Dimensions: {{ movie.poster_dimensions }} | 
-                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}<br>
+                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
                     </p>
                 </div>
+                
                 {% endfor %}
             </div>
     </div>
