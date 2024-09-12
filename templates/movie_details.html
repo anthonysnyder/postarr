@@ -3,38 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} Posters</title>
+    <title>{{ title }} Posters</title> <!-- Dynamic page title based on the movie title -->
     <style>
+        /* Style for the poster grid container */
         .poster-grid {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Allows the posters to wrap on the next line when the row is full */
         }
+
+        /* Style for each poster item */
         .poster-grid img {
-            max-width: 200px;
-            margin: 10px;
-            cursor: pointer;
+            max-width: 200px; /* Set a maximum width for each poster */
+            margin: 10px;     /* Add spacing between each poster */
+            cursor: pointer;  /* Change cursor to pointer when hovering over the poster */
         }
     </style>
 </head>
 <body>
+    <!-- Page heading that shows which movie's posters are being displayed -->
     <h1>Posters for {{ title }}</h1>
+
+    <!-- Container to hold all posters in a flexible grid layout -->
     <div class="poster-grid">
         {% for poster in posters %}
             <div class="poster-item">
+                <!-- Display each poster image, and attach the onclick event to select the poster -->
                 <img src="{{ poster.url }}" alt="Poster" onclick="selectPoster('{{ title }}', '{{ poster.url }}')">
             </div>
         {% endfor %}
     </div>
+
+    <!-- Hidden form to submit the selected poster and movie title back to the server -->
     <form id="posterForm" method="POST" action="{{ url_for('select_poster') }}">
+        <!-- Hidden input to hold the movie title that will be submitted with the form -->
         <input type="hidden" id="movieTitle" name="movie_title" value="">
+        <!-- Hidden input to hold the selected poster URL that will be submitted with the form -->
         <input type="hidden" id="posterUrl" name="poster_url" value="">
     </form>
 
     <script>
+        /* 
+           Function to handle poster selection.
+           Sets the movie title and poster URL in the hidden form fields and submits the form.
+        */
         function selectPoster(title, url) {
-            document.getElementById('movieTitle').value = title;
-            document.getElementById('posterUrl').value = url;
-            document.getElementById('posterForm').submit();
+            document.getElementById('movieTitle').value = title;  // Set the movie title
+            document.getElementById('posterUrl').value = url;     // Set the poster URL
+            document.getElementById('posterForm').submit();       // Submit the form
         }
     </script>
 </body>
