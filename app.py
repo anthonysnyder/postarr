@@ -257,6 +257,10 @@ def select_poster():
     # Save the full-resolution poster and generate the thumbnail
     save_poster_and_thumbnail(poster_path, movie_title, save_dir)
 
+    # Send Slack notification
+    message = f"Poster for '{movie_title}' has been downloaded!"
+    send_slack_notification(message, poster_path)
+
     # Create anchor using generate_clean_id
     clean_id = generate_clean_id(movie_title)
 
@@ -310,6 +314,30 @@ def confirm_directory():
     # Redirect back to the index page with an anchor to the selected movie
     return redirect(url_for('index') + f"#{anchor}")  # Redirect to the index page with the anchor (clean_id)
 
+# Slack webhook notification function
+def send_slack_notification(message, poster_path):
+    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+    if slack_webhook_url:
+        payload = {
+            "text": message,
+            "attachments": [
+                {
+                    "text": f"Poster saved to: {poster_path}",
+                    "image_url": poster_path
+                }
+            ]
+        }
+        try:
+            response = requests.post(slack_webhook_url, json=payload)
+            if response.status_code == 200:
+                print(f"Slack notification sent successfully for {poster_path}")
+            else:
+                print(f"Failed to send Slack notification. Status code: {response.status_code}")
+        except Exception as e:
+            print(f"Error sending Slack notification: {e}")
+    else:
+        print("Slack webhook URL not set.")
+
 # Route for refreshing index.html
 @app.route('/refresh')
 def refresh_page():
@@ -317,3 +345,5 @@ def refresh_page():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)  # Run the app, listening on all network interfaces at port 5000
+
+    
