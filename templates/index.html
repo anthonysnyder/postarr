@@ -122,7 +122,7 @@
             
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <div class="movie-card" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
+                <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}" data-has-poster="{{ movie.has_poster }}">
                     <div>
                         {% if movie.poster %}
                         <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
@@ -203,6 +203,39 @@
             triggerSearch(title);
         });
     });
+
+    // Scroll to anchor once the page has fully loaded
+window.onload = function() {
+    setTimeout(() => {
+        const hash = window.location.hash;
+        if (hash) {
+            let anchor = hash.slice(1);  // Get anchor without '#'
+            console.log(`Navigating to anchor: ${anchor}`);
+            
+            try {
+                // Check all movie-card IDs on the page
+                const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
+
+                // Correct anchor to match ID with year if it doesn't directly match
+                if (!allIds.includes(anchor)) {
+                    anchor = allIds.find(id => id.startsWith(anchor));
+                }
+
+                const targetElement = document.getElementById(anchor);
+
+                if (targetElement) {
+                    console.log(`Found element with ID: ${anchor}`);
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    console.error(`Element with ID "${anchor}" not found.`);
+                }
+            } catch (error) {
+                console.error(`Error occurred while navigating to anchor: ${error.message}`);
+            }
+        }
+    }, 10000);  // Delay to ensure the page fully renders before scrolling
+};
+
 </script>
 </body>
 </html>
