@@ -126,10 +126,10 @@
                     <div>
                         {% if movie.poster_thumb %}
                         <!-- Display the thumbnail if available -->
-                        <img src="{{ movie.poster_thumb }}?refresh=true" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
+                        <img src="{{ movie.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
                         {% elif movie.poster %}
                         <!-- Fallback to the full-resolution poster if no thumbnail -->
-                        <img src="{{ movie.poster }}?refresh=true" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
+                        <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
                         {% else %}
                         <!-- Display a placeholder if no poster is available -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
@@ -144,7 +144,8 @@
                     </p>
                 </div>
                 {% endfor %}
-            </div>            
+            </div>
+            
             
         </div>
     </div>
