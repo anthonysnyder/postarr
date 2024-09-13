@@ -19,7 +19,9 @@ Welcome to Postarr, a Flask-based application designed to automatically scrape y
 	•	Docker installed on your system.
 	•	A Synology NAS or any system capable of running Docker containers.
 	•	A valid TMDb API key.
+ 	•	If you have existing poster.ext in your movie folders, then you will want to use my side project: postarr-thumbnail-creator in order to automatically create poster-thumb.jpg of the existing files. This was done to speed up load time on librarys with large amount of movies. 
 	•	(Optional) Slack webhook URL for notifications.
+ 
 
 ## Getting Started
 
