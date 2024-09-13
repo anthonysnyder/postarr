@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Postarr</title>
+    <title>My Movie Collection</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
@@ -61,6 +61,7 @@
             height: auto;
             object-fit: cover;
             border-radius: 8px;
+            /* Removed max-height to allow full thumbnail display */
         }
 
         .movie-card h5 {
@@ -84,13 +85,21 @@
     </style>
 </head>
 <body>
+<div id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-dark border-right" id="sidebar-wrapper">
+        <div class="sidebar-heading">My Movie Collection</div>
+        <div class="list-group list-group-flush">
+            <a href="/" class="list-group-item list-group-item-action">Dashboard</a>
+            <a href="/movies" class="list-group-item list-group-item-action">Movies</a>
+        </div>
+    </div>
 
     <!-- Page Content -->
     <div id="page-content-wrapper">
         <div class="container-fluid">
             <h1 class="my-4">Dashboard</h1>
             <div class="row">
-                <!-- Displays the total number of movies -->
                 <div class="col-lg-3 col-md-6">
                     <div class="card bg-light text-dark mb-4">
                         <div class="card-body">
@@ -99,48 +108,41 @@
                         </div>
                     </div>
                 </div>
+                <!-- Additional Widgets can be added here -->
             </div>
 
             <h1 class="my-4">My Movie Collection</h1>
             
-            <!-- Input field for searching movies -->
             <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
                 <button class="btn btn-primary" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
                 <button class="btn btn-secondary" onclick="showAllMovies()">Show All</button>
                 <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>
-                <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh Page</button>
-                <!-- New refresh posters button -->
-                <button class="btn btn-warning" onclick="refreshPosters()">Refresh Posters</button>
             </div>
             
-            <!-- Movie grid displaying all movies -->
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <!-- Movie card with the clean_id used as the element ID -->
-                <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}">
+                <div class="movie-card" data-title="{{ movie.title | lower }}" {% if movie.poster %}data-has-poster="true"{% else %}data-has-poster="false"{% endif %}>
                     <div>
-                        {% if movie.poster_thumb %}
-                        <!-- Display the thumbnail if available -->
-                        <img src="{{ movie.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" 
-                             alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.clean_id }}')">
+                        {% if movie.poster %}
+                        <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
                         {% else %}
-                        <!-- Display a placeholder if no poster is available -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
-                    <!-- Display movie details -->
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.clean_id }}')">{{ movie.title }}</h5>
-                    <p class="poster-dimensions text-center">
-                        Dimensions: {{ movie.poster_dimensions }} | 
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+            
+                    <!-- Use a single paragraph to avoid line break and make labels bold -->
+                    <p class="text-center">
+                        <strong>Dimensions:</strong> {{ movie.poster_dimensions }} | 
                         <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
                     </p>
                 </div>
-                
                 {% endfor %}
             </div>
+        </div>
     </div>
 </div>
 
@@ -152,7 +154,6 @@
         return true;
     };
 
-    // Function to trigger a movie search
     function triggerSearch(title) {
         console.log("Clicked on:", title);
         try {
@@ -164,40 +165,6 @@
         }
     }
 
-// Scroll to anchor once the page has fully loaded
-window.onload = function() {
-    setTimeout(() => {
-        const hash = window.location.hash;
-        if (hash) {
-            let anchor = hash.slice(1);  // Get anchor without '#'
-            console.log(`Navigating to anchor: ${anchor}`);
-            
-            try {
-                // Check all movie-card IDs on the page
-                const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
-
-                // Correct anchor to match ID with year if it doesn't directly match
-                if (!allIds.includes(anchor)) {
-                    anchor = allIds.find(id => id.startsWith(anchor));
-                }
-
-                const targetElement = document.getElementById(anchor);
-
-                if (targetElement) {
-                    console.log(`Found element with ID: ${anchor}`);
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    console.error(`Element with ID "${anchor}" not found.`);
-                }
-            } catch (error) {
-                console.error(`Error occurred while navigating to anchor: ${error.message}`);
-            }
-        }
-    }, 2500);  // Delay to ensure the page fully renders before scrolling
-};
-
-
-    // Function to show only movies without posters
     function showMoviesWithoutPoster() {
         console.log('Showing movies without posters.');
         const movies = document.querySelectorAll('#movieList .movie-card');
@@ -211,13 +178,11 @@ window.onload = function() {
         });
     }
 
-    // Function to show all movies
     function showAllMovies() {
         console.log('Showing all movies.');
         window.location.href = `/`;
     }
 
-    // Search function to filter movies based on user input
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const movies = document.querySelectorAll('#movieList .movie-card');
@@ -232,14 +197,12 @@ window.onload = function() {
         });
     });
 
-    // Trigger search when movie card is clicked
     document.querySelectorAll('.movie-card').forEach(item => {
         item.addEventListener('click', event => {
             const title = item.querySelector('h5').textContent;
             triggerSearch(title);
         });
     });
-    
 </script>
 </body>
 </html>

@@ -101,7 +101,8 @@ def get_poster_thumbnails():
                     'poster_thumb': poster_thumb,  # Add the thumbnail poster
                     'poster_dimensions': poster_dimensions,  # Add poster dimensions
                     'poster_last_modified': poster_last_modified,  # Add last modified date (only date)
-                    'clean_id': clean_id  # Add the clean ID for the movie
+                    'clean_id': clean_id,  # Add the clean ID for the movie
+                    'has_poster': bool(poster_thumb)  # Add a boolean indicating if a poster thumbnail exists
                 })
 
     # Sort the movies globally by title, ignoring "The" when sorting
