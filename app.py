@@ -3,9 +3,9 @@ import requests
 import re
 import urllib.parse
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-from difflib import get_close_matches, SequenceMatcher  # Used for string similarity
-from PIL import Image
-from datetime import datetime
+from difflib import get_close_matches, SequenceMatcher  # For string similarity
+from PIL import Image  # For image processing
+from datetime import datetime  # For handling dates and times
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -13,10 +13,10 @@ app = Flask(__name__)
 # Custom Jinja2 filter to remove years from movie titles (e.g., 1995, 2020)
 @app.template_filter('remove_year')
 def remove_year(value):
-    # Use regular expression to remove years and strip whitespace
+    # Remove years in the format 19xx, 20xx, 21xx, 22xx, or 23xx
     return re.sub(r'\b(19|20|21|22|23)\d{2}\b', '', value).strip()
 
-# Fetch TMDb API key from environment variables (useful when running with Docker)
+# Fetch TMDb API key from environment variables
 TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 
 # Base URLs for TMDb API and images
@@ -136,9 +136,6 @@ def search_movie():
     # Get the query string from the URL parameters
     query = request.args.get('query', '')
 
-    # Normalize the search query (not strictly necessary here)
-    normalized_movie_dir = normalize_title(query)
-
     # Make a request to the TMDb API to search for movies matching the query
     response = requests.get(f"{BASE_URL}/search/movie", params={"api_key": TMDB_API_KEY, "query": query})
     results = response.json().get('results', [])
@@ -185,7 +182,7 @@ def select_movie(movie_id):
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title, clean_id=clean_id)
 
 # Function to handle poster selection and download, including thumbnail creation
-def save_poster_and_thumbnail(poster_path, movie_title, save_dir):
+def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
     full_poster_path = os.path.join(save_dir, 'poster.jpg')
     thumb_poster_path = os.path.join(save_dir, 'poster-thumb.jpg')
 
@@ -200,7 +197,7 @@ def save_poster_and_thumbnail(poster_path, movie_title, save_dir):
                 os.remove(existing_thumb)
 
         # Download the full-resolution poster
-        response = requests.get(poster_path)
+        response = requests.get(poster_url)
         if response.status_code == 200:
             # Save the downloaded poster image
             with open(full_poster_path, 'wb') as file:
@@ -230,17 +227,20 @@ def save_poster_and_thumbnail(poster_path, movie_title, save_dir):
                 img.save(thumb_poster_path, "JPEG", quality=90)
 
             print(f"Poster and thumbnail saved successfully for '{movie_title}'")
+            return full_poster_path  # Return the local path where the poster was saved
         else:
             print(f"Failed to download poster for '{movie_title}'. Status code: {response.status_code}")
+            return None
 
     except Exception as e:
         print(f"Error saving poster and generating thumbnail for '{movie_title}': {e}")
+        return None
 
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
     # Get the selected poster URL and movie title from the form submission
-    poster_path = request.form['poster_path']
+    poster_url = request.form['poster_path']
     movie_title = request.form['movie_title']
 
     # Initialize variables
@@ -278,11 +278,14 @@ def select_poster():
 
     # If an exact match was found, proceed to save the poster
     if save_dir:
-        # Save the poster and generate thumbnail
-        save_poster_and_thumbnail(poster_path, movie_title, save_dir)
-        # Send Slack notification (if configured)
-        message = f"Poster for '{movie_title}' has been downloaded!"
-        send_slack_notification(message, poster_path)
+        # Save the poster and get the local path
+        local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+        if local_poster_path:
+            # Send Slack notification with the local path
+            message = f"Poster for '{movie_title}' has been downloaded!"
+            send_slack_notification(message, local_poster_path, poster_url)
+        else:
+            print(f"Failed to save poster for '{movie_title}'")
         # Create anchor for navigation
         clean_id = generate_clean_id(movie_title)
         # Redirect back to the index page with an anchor to the selected movie
@@ -295,11 +298,14 @@ def select_poster():
             save_dir = best_match_dir
             # Log the automatic selection
             print(f"Automatically selected directory '{save_dir}' for movie '{movie_title}' with similarity {best_similarity:.2f}")
-            # Save the poster and generate thumbnail
-            save_poster_and_thumbnail(poster_path, movie_title, save_dir)
-            # Send Slack notification (if configured)
-            message = f"Poster for '{movie_title}' has been downloaded!"
-            send_slack_notification(message, poster_path)
+            # Save the poster and get the local path
+            local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+            if local_poster_path:
+                # Send Slack notification with the local path
+                message = f"Poster for '{movie_title}' has been downloaded!"
+                send_slack_notification(message, local_poster_path, poster_url)
+            else:
+                print(f"Failed to save poster for '{movie_title}'")
             # Create anchor for navigation
             clean_id = generate_clean_id(movie_title)
             # Redirect back to the index page with an anchor to the selected movie
@@ -311,7 +317,7 @@ def select_poster():
             # Find similar directory names to present to the user
             similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
             # Render the select_directory.html template for user to choose
-            return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_path)
+            return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_url)
 
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
@@ -344,7 +350,7 @@ def confirm_directory():
     # Get the selected directory and other details from the form submission
     selected_directory = request.form['selected_directory']
     movie_title = request.form['movie_title']
-    poster_path = request.form['poster_path']
+    poster_url = request.form['poster_path']
 
     # Construct the save directory path based on the selected directory
     save_dir = None
@@ -358,8 +364,14 @@ def confirm_directory():
         print(f"Selected directory '{selected_directory}' not found in base folders.")
         return "Directory not found", 404
 
-    # Save the poster and generate thumbnail
-    save_poster_and_thumbnail(poster_path, movie_title, save_dir)
+    # Save the poster and get the local path
+    local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+    if local_poster_path:
+        # Send Slack notification with the local path
+        message = f"Poster for '{movie_title}' has been downloaded!"
+        send_slack_notification(message, local_poster_path, poster_url)
+    else:
+        print(f"Failed to save poster for '{movie_title}'")
 
     # Generate clean_id for navigation
     anchor = generate_clean_id(movie_title)
@@ -367,22 +379,22 @@ def confirm_directory():
     return redirect(url_for('index') + f"#{anchor}")
 
 # Function to send Slack notifications (if a webhook URL is configured)
-def send_slack_notification(message, poster_path):
+def send_slack_notification(message, local_poster_path, poster_url):
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
     if slack_webhook_url:
         payload = {
             "text": message,
             "attachments": [
                 {
-                    "text": f"Poster saved to: {poster_path}",
-                    "image_url": poster_path
+                    "text": f"Poster saved to: {local_poster_path}",
+                    "image_url": poster_url  # Use the original TMDb image URL to display the poster in Slack
                 }
             ]
         }
         try:
             response = requests.post(slack_webhook_url, json=payload)
             if response.status_code == 200:
-                print(f"Slack notification sent successfully for '{poster_path}'")
+                print(f"Slack notification sent successfully for '{local_poster_path}'")
             else:
                 print(f"Failed to send Slack notification. Status code: {response.status_code}")
         except Exception as e:
