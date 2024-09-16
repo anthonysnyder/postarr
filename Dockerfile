@@ -1,6 +1,16 @@
 # Base image with Python (multi-architecture support is native here)
 FROM python:3.12-slim
 
+# Install system dependencies required by Pillow
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libjpeg62-turbo-dev \
+    zlib1g-dev \
+    libfreetype6-dev \
+    liblcms2-dev \
+    libopenjp2-7-dev \
+    libtiff-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -10,9 +20,6 @@ COPY requirements.txt /app/
 # Install the required Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Pillow in the container (could be part of requirements.txt, but included separately here)
-RUN pip install Pillow
-
 # Copy the rest of the app
 COPY . /app
 
@@ -20,4 +27,4 @@ COPY . /app
 EXPOSE 5000
 
 # Define the command to run the Flask app
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["python", "app.py"]
