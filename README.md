@@ -21,9 +21,9 @@ Welcome to Postarr, a Flask-based application designed to automatically scrape y
 	•	A valid TMDb API key.
  	•	If you have existing poster.ext in your movie folders, then you will want to use my side project: postarr-thumbnail-creator in order to automatically create poster-thumb.jpg of the existing files. This was done to speed up load time on librarys with large amount of movies. 
 	•	(Optional) Slack webhook URL for notifications.
+ **IMPORTANT NOTE**: Unless you use my [poster-thumbnail script](https://github.com/anthonysnyder/postarr-thumbnail-creator/tree/main "poster-thumbnail script") in order to create thumbnails, this app will **NOT** display any thumbnails. This was done in order to severely reduce load times on large libraries. 
  
-
-## Getting Started
+ ## Getting Started
 
 ## 1. Clone the Repository:
 ```
