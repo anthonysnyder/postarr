@@ -169,17 +169,19 @@
     }
 
     function showMoviesWithoutPoster() {
-        console.log('Showing movies without posters.');
-        const movies = document.querySelectorAll('#movieList .movie-card');
-        movies.forEach(function(movie) {
-            const hasPoster = movie.getAttribute('data-has-poster');
-            if (hasPoster === "true") {
-                movie.style.display = 'none';
-            } else {
-                movie.style.display = 'block';
-            }
-        });
-    }
+    console.log('Showing movies without posters.');
+    const movies = document.querySelectorAll('#movieList .movie-card');
+    movies.forEach(function(movie) {
+        const hasPoster = movie.getAttribute('data-has-poster');
+        console.log(`Movie: ${movie.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+        
+        if (hasPoster === "true") {
+            movie.style.display = 'none';
+        } else {
+            movie.style.display = 'block';
+        }
+    });
+}
 
     function showAllMovies() {
         console.log('Showing all movies.');
