@@ -172,9 +172,7 @@
     console.log('Showing movies without posters.');
     const movies = document.querySelectorAll('#movieList .movie-card');
     movies.forEach(function(movie) {
-        const hasPoster = movie.getAttribute('data-has-poster');
-        console.log(`Movie: ${movie.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
-        
+        const hasPoster = movie.getAttribute('data-has-poster').toLowerCase(); // Convert to lowercase
         if (hasPoster === "true") {
             movie.style.display = 'none';
         } else {
