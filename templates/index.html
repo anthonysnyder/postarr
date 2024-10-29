@@ -112,7 +112,9 @@
             <h1 class="my-4">My Movie Collection</h1>
 
             <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
-            <div class="btn-group mt-2 mb-4" role="group">
+            <div class="btn-group" role="group">
+                <a href="/?content_type=movie" class="btn btn-primary {{ 'active' if content_type == 'movie' else '' }}">Movies</a>
+                <a href="/?content_type=tv" class="btn btn-secondary {{ 'active' if content_type == 'tv' else '' }}">TV Shows</a>
                 <button class="btn btn-primary" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
                 <button class="btn btn-secondary" onclick="showAllMovies()">Show All</button>
                 <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>

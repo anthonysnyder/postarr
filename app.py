@@ -23,13 +23,9 @@ TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 BASE_URL = "https://api.themoviedb.org/3"
 POSTER_BASE_URL = "https://image.tmdb.org/t/p/original"
 
-# Define the base folders where your movie directories are located
-base_folders = [
-    "/movies",
-    "/kids-movies",
-    "/movies2",
-    "/kids-movies2"
-]
+# Define folder paths for movies and TV shows
+MOVIE_FOLDERS = ["/movies", "/kids-movies", "/movies2", "/kids-movies2"]
+TV_FOLDERS = ["/tv", "/kids-tv", "/tv2", "/kids-tv2"]
 
 # Function to normalize movie titles for consistent search and comparison
 def normalize_title(title):
@@ -48,81 +44,66 @@ def generate_clean_id(title):
     clean_id = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
     return clean_id
 
-# Function to retrieve movie directories and their associated posters for the index page
-def get_poster_thumbnails():
+import os
+import urllib.parse
+
+def get_movie_thumbnails():
     movies = []
-
-    # Iterate over all base folders
-    for base_folder in base_folders:
-        # List all items in the base folder
-        for movie_dir in sorted(os.listdir(base_folder)):
-            # Ignore special directories (e.g., @eadir on Synology NAS)
-            if movie_dir == "@eadir":
-                continue
-
-            original_movie_dir = movie_dir  # Store the original directory name
-            movie_path = os.path.join(base_folder, original_movie_dir)  # Construct the full path to the movie directory
-
-            # Check if the path is a directory (i.e., a movie folder)
+    for folder in MOVIE_FOLDERS:
+        for movie_dir in os.listdir(folder):
+            movie_path = os.path.join(folder, movie_dir)
             if os.path.isdir(movie_path):
-                poster = None
-                poster_thumb = None  # Initialize thumbnail poster
-                poster_dimensions = None  # Initialize poster dimensions
-                poster_last_modified = None  # Initialize last modified date
-
-                # Look for an existing thumbnail and poster in the directory
+                has_poster = False
+                poster_thumb = None
                 for ext in ['jpg', 'jpeg', 'png']:
                     thumb_path = os.path.join(movie_path, f"poster-thumb.{ext}")
-                    poster_path = os.path.join(movie_path, f"poster.{ext}")
                     if os.path.exists(thumb_path):
-                        # Generate the thumbnail URL using the /poster/ route
-                        poster_thumb = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster-thumb.{ext}"
-
-                    if os.path.exists(poster_path):
-                        # Generate the full poster URL
-                        poster = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster.{ext}"
-
-                        # Extract poster dimensions using Pillow
-                        try:
-                            with Image.open(poster_path) as img:
-                                width, height = img.size
-                                poster_dimensions = f"{width}x{height}"
-                        except Exception as e:
-                            poster_dimensions = "Unknown"
-
-                        # Get the last modified time of the poster and format only the date
-                        timestamp = os.path.getmtime(poster_path)
-                        poster_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')  # Format date
-                        break  # Exit the loop once poster is found
-
-                # Generate clean ID for the movie (used as an anchor in the webpage)
-                clean_id = generate_clean_id(original_movie_dir)
-
-                # Append movie details to the list
+                        poster_thumb = f"/poster/{urllib.parse.quote(movie_dir)}/poster-thumb.{ext}?content_type=movie"
+                        has_poster = True
+                        break
                 movies.append({
-                    'title': original_movie_dir,
-                    'poster': poster,
+                    'title': movie_dir,
                     'poster_thumb': poster_thumb,
-                    'poster_dimensions': poster_dimensions,
-                    'poster_last_modified': poster_last_modified,
-                    'clean_id': clean_id,
-                    'has_poster': bool(poster_thumb)  # True if a thumbnail exists
+                    'has_poster': has_poster
                 })
+    # Sort movies alphabetically
+    movies = sorted(movies, key=lambda x: x['title'].lower())
+    return movies
 
-    # Sort the movies globally by title, ignoring "The" at the beginning
-    movies_sorted = sorted(movies, key=lambda x: strip_leading_the(x['title'].lower()))
-
-    # Return the sorted list of movies and the total count
-    return movies_sorted, len(movies_sorted)
+def get_tv_show_thumbnails():
+    tv_shows = []
+    for folder in TV_FOLDERS:
+        for show_dir in os.listdir(folder):
+            show_path = os.path.join(folder, show_dir)
+            if os.path.isdir(show_path):
+                has_poster = False
+                poster_thumb = None
+                for ext in ['jpg', 'jpeg', 'png']:
+                    thumb_path = os.path.join(show_path, f"poster-thumb.{ext}")
+                    if os.path.exists(thumb_path):
+                        poster_thumb = f"/poster/{urllib.parse.quote(show_dir)}/poster-thumb.{ext}?content_type=tv"
+                        has_poster = True
+                        break
+                tv_shows.append({
+                    'title': show_dir,
+                    'poster_thumb': poster_thumb,
+                    'has_poster': has_poster
+                })
+    # Sort TV shows alphabetically
+    tv_shows = sorted(tv_shows, key=lambda x: x['title'].lower())
+    return tv_shows
 
 # Route for the index page
 @app.route('/')
 def index():
-    # Fetch the list of movies and their posters
-    movies, total_movies = get_poster_thumbnails()
-
-    # Render the index.html template with the movie data and total count
-    return render_template('index.html', movies=movies, total_movies=total_movies)
+    content_type = request.args.get('content_type', 'movie')
+    if content_type == 'movie':
+        media = get_movie_thumbnails()
+    else:
+        media = get_tv_show_thumbnails()
+    
+    total_count = len(media)
+    return render_template('index.html', media=media, total_count=total_count, content_type=content_type)
 
 # Route to refresh index.html (if needed)
 @app.route('/refresh')
