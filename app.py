@@ -129,6 +129,23 @@ def search_movie():
     # Render the search_results.html template with the movies found
     return render_template('search_results.html', query=query, results=results)
 
+# Route for searching TV shows using TMDb API
+@app.route('/search_tv', methods=['GET'])
+def search_tv():
+    # Get the query string from the URL parameters
+    query = request.args.get('query', '')
+
+    # Make a request to the TMDb API to search for TV shows matching the query
+    response = requests.get(f"{BASE_URL}/search/tv", params={"api_key": TMDB_API_KEY, "query": query, "include_adult": False, "language": "en-US", "page": 1})
+    results = response.json().get('results', [])
+
+    # Normalize TMDb titles using generate_clean_id for consistency
+    for result in results:
+        result['clean_id'] = generate_clean_id(result['name'])  # TV shows use 'name' instead of 'title'
+
+    # Render the search_results.html template with the TV shows found
+    return render_template('search_results.html', query=query, results=results, content_type="tv")
+
 # Route for selecting a movie and displaying available posters
 @app.route('/select_movie/<int:movie_id>', methods=['GET'])
 def select_movie(movie_id):
@@ -300,11 +317,29 @@ def select_poster():
             similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
             # Render the select_directory.html template for user to choose
             return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_url)
-        
+
+#TEMP ROUTING FOR TESTING PURPOSES     
 @app.route('/test-tv-folders')
 def test_tv_folders():
     tv_shows, total_count = get_poster_thumbnails(tv_folders)
     return {"tv_shows": tv_shows, "total_count": total_count}
+
+# Temporary route for testing TV show search - returns JSON
+@app.route('/search_tv', methods=['GET'])
+def search_tv():
+    # Get the query string from the URL parameters
+    query = request.args.get('query', '')
+
+    # Make a request to the TMDb API to search for TV shows matching the query
+    response = requests.get(f"{BASE_URL}/search/tv", params={"api_key": TMDB_API_KEY, "query": query, "include_adult": False, "language": "en-US", "page": 1})
+    results = response.json().get('results', [])
+
+    # Normalize TMDb titles using generate_clean_id for consistency
+    for result in results:
+        result['clean_id'] = generate_clean_id(result['name'])  # TV shows use 'name' instead of 'title'
+
+    # Return JSON response for testing
+    return {"query": query, "results": results}
 
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
