@@ -23,13 +23,9 @@ TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 BASE_URL = "https://api.themoviedb.org/3"
 POSTER_BASE_URL = "https://image.tmdb.org/t/p/original"
 
-# Define the base folders where your movie directories are located
-base_folders = [
-    "/movies",
-    "/kids-movies",
-    "/movies2",
-    "/kids-movies2"
-]
+# Define base folders for movies and TV shows
+movie_folders = ["/movies", "/kids-movies", "/movies2", "/kids-movies2"]
+tv_folders = ["/tv", "/kids-tv", "/tv2", "/kids-tv2"]  # Ensure these folders are accessible
 
 # Function to normalize movie titles for consistent search and comparison
 def normalize_title(title):
