@@ -49,71 +49,57 @@ def generate_clean_id(title):
     return clean_id
 
 # Function to retrieve movie directories and their associated posters for the index page
-def get_poster_thumbnails():
-    movies = []
+def get_poster_thumbnails(base_folders):
+    media_list = []
 
-    # Iterate over all base folders
+    # Iterate over each specified base folder (movies or TV shows)
     for base_folder in base_folders:
-        # List all items in the base folder
-        for movie_dir in sorted(os.listdir(base_folder)):
-            # Ignore special directories (e.g., @eadir on Synology NAS)
-            if movie_dir == "@eadir":
+        for media_dir in sorted(os.listdir(base_folder)):
+            if media_dir == "@eadir":  # Skip Synology NAS system folders
                 continue
 
-            original_movie_dir = movie_dir  # Store the original directory name
-            movie_path = os.path.join(base_folder, original_movie_dir)  # Construct the full path to the movie directory
+            media_path = os.path.join(base_folder, media_dir)
 
-            # Check if the path is a directory (i.e., a movie folder)
-            if os.path.isdir(movie_path):
+            if os.path.isdir(media_path):
                 poster = None
-                poster_thumb = None  # Initialize thumbnail poster
-                poster_dimensions = None  # Initialize poster dimensions
-                poster_last_modified = None  # Initialize last modified date
+                poster_thumb = None
+                poster_dimensions = None
+                poster_last_modified = None
 
-                # Look for an existing thumbnail and poster in the directory
+                # Search for poster files in the directory
                 for ext in ['jpg', 'jpeg', 'png']:
-                    thumb_path = os.path.join(movie_path, f"poster-thumb.{ext}")
-                    poster_path = os.path.join(movie_path, f"poster.{ext}")
+                    thumb_path = os.path.join(media_path, f"poster-thumb.{ext}")
+                    poster_path = os.path.join(media_path, f"poster.{ext}")
+
                     if os.path.exists(thumb_path):
-                        # Generate the thumbnail URL using the /poster/ route
-                        poster_thumb = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster-thumb.{ext}"
+                        poster_thumb = f"/poster/{urllib.parse.quote(media_dir)}/poster-thumb.{ext}"
 
                     if os.path.exists(poster_path):
-                        # Generate the full poster URL
-                        poster = f"/poster/{urllib.parse.quote(original_movie_dir)}/poster.{ext}"
+                        poster = f"/poster/{urllib.parse.quote(media_dir)}/poster.{ext}"
 
-                        # Extract poster dimensions using Pillow
                         try:
                             with Image.open(poster_path) as img:
-                                width, height = img.size
-                                poster_dimensions = f"{width}x{height}"
-                        except Exception as e:
+                                poster_dimensions = f"{img.width}x{img.height}"
+                        except Exception:
                             poster_dimensions = "Unknown"
 
-                        # Get the last modified time of the poster and format only the date
                         timestamp = os.path.getmtime(poster_path)
-                        poster_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')  # Format date
-                        break  # Exit the loop once poster is found
+                        poster_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+                        break
 
-                # Generate clean ID for the movie (used as an anchor in the webpage)
-                clean_id = generate_clean_id(original_movie_dir)
-
-                # Append movie details to the list
-                movies.append({
-                    'title': original_movie_dir,
+                clean_id = generate_clean_id(media_dir)
+                media_list.append({
+                    'title': media_dir,
                     'poster': poster,
                     'poster_thumb': poster_thumb,
                     'poster_dimensions': poster_dimensions,
                     'poster_last_modified': poster_last_modified,
                     'clean_id': clean_id,
-                    'has_poster': bool(poster_thumb)  # True if a thumbnail exists
+                    'has_poster': bool(poster_thumb)
                 })
 
-    # Sort the movies globally by title, ignoring "The" at the beginning
-    movies_sorted = sorted(movies, key=lambda x: strip_leading_the(x['title'].lower()))
-
-    # Return the sorted list of movies and the total count
-    return movies_sorted, len(movies_sorted)
+    media_list = sorted(media_list, key=lambda x: strip_leading_the(x['title'].lower()))
+    return media_list, len(media_list)
 
 # Route for the index page
 @app.route('/')
@@ -318,6 +304,11 @@ def select_poster():
             similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
             # Render the select_directory.html template for user to choose
             return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_url)
+        
+@app.route('/test-tv-folders')
+def test_tv_folders():
+    tv_shows, total_count = get_poster_thumbnails(tv_folders)
+    return {"tv_shows": tv_shows, "total_count": total_count}
 
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
