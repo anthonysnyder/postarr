@@ -181,6 +181,35 @@ def select_movie(movie_id):
     # Render the poster_selection.html template with the sorted posters and clean_id
     return render_template('poster_selection.html', posters=posters, movie_title=movie_title, clean_id=clean_id)
 
+# Route for selecting a TV show and displaying available posters
+@app.route('/select_tv/<int:tv_id>', methods=['GET'])
+def select_tv(tv_id):
+    # Request details of the selected TV show from TMDb API
+    tv_details = requests.get(f"{BASE_URL}/tv/{tv_id}", params={"api_key": TMDB_API_KEY}).json()
+
+    # Extract the TV show title and generate clean_id
+    tv_title = tv_details.get('name', '')
+    clean_id = generate_clean_id(tv_title)
+
+    # Request available posters for the selected TV show
+    posters = requests.get(f"{BASE_URL}/tv/{tv_id}/images", params={"api_key": TMDB_API_KEY}).json().get('posters', [])
+
+    # Filter posters to only include English language posters
+    posters = [poster for poster in posters if poster['iso_639_1'] == 'en']
+
+    # Sort posters by resolution in descending order (highest resolution first)
+    posters_sorted = sorted(posters, key=lambda p: p['width'] * p['height'], reverse=True)
+
+    # Format the poster URLs and details for display
+    formatted_posters = [{
+        'url': f"{POSTER_BASE_URL}{poster['file_path']}",
+        'size': f"{poster['width']}x{poster['height']}",
+        'language': poster['iso_639_1']
+    } for poster in posters_sorted]
+
+    # Render the poster_selection.html template with the sorted posters and clean_id
+    return render_template('poster_selection.html', posters=formatted_posters, movie_title=tv_title, clean_id=clean_id, content_type="tv")
+
 # Function to handle poster selection and download, including thumbnail creation
 def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
     full_poster_path = os.path.join(save_dir, 'poster.jpg')

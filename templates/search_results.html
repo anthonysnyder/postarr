@@ -3,32 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Page title for search results -->
     <title>Search Results</title>
-    <!-- Bootstrap for styling -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .card {
+            background-color: #454d55;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+        }
+        .card-body {
+            padding: 1rem;
+        }
+        .card-img-top {
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            height: 300px;
+            object-fit: cover;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .search-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Heading displaying the search query -->
-        <h1 class="my-4">Search Results for "{{ query }}"</h1>
-        <div class="list-group">
-            <!-- Loop through each result from the search results -->
-            {% for result in results %}
-                <!-- Link to select a movie, using result.clean_id for an anchor and unique ID -->
-                <a href="{{ url_for('select_movie', movie_id=result.id) }}" id="{{ result.clean_id }}" class="list-group-item list-group-item-action">
-                    <div class="d-flex align-items-center"> <!-- Align poster and title next to each other -->
-                        <!-- Check if the result has a poster path -->
-                        {% if result.poster_path %}
-                            <!-- Display a small poster image -->
-                            <img src="https://image.tmdb.org/t/p/w92{{ result.poster_path }}" alt="{{ result.title }}" class="mr-3">
-                        {% endif %}
-                        <!-- Display the movie title and release year (if available) -->
-                        <h5>{{ result.title }} ({{ result.release_date[:4] if result.release_date else 'N/A' }})</h5>
-                    </div>
-                </a>
-            {% endfor %}
-        </div>
+<div class="container">
+    <div class="search-header">
+        <h1>Search Results for "{{ query }}"</h1>
+        <p>{{ results | length }} results found</p>
     </div>
+    <div class="row">
+        {% for result in results %}
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                {% if result.poster_path %}
+                <img src="https://image.tmdb.org/t/p/w500{{ result.poster_path }}" class="card-img-top" alt="{{ result.title or result.name }}">
+                {% else %}
+                <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 300px; background-color: #6c757d;">
+                    <span>No Image Available</span>
+                </div>
+                {% endif %}
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ result.title or result.name }}</h5>
+                    <p class="card-text">
+                        {% if result.release_date %}
+                        <strong>Release Date:</strong> {{ result.release_date }}
+                        {% elif result.first_air_date %}
+                        <strong>First Air Date:</strong> {{ result.first_air_date }}
+                        {% endif %}
+                    </p>
+                    <form action="{% if content_type == 'tv' %}{{ url_for('select_tv', tv_id=result.id) }}{% else %}{{ url_for('select_movie', movie_id=result.id) }}{% endif %}" method="GET">
+                        <button type="submit" class="btn btn-primary">Select</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 </body>
 </html>
