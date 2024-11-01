@@ -6,7 +6,69 @@
     <title>My TV Show Collection</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* Styles omitted for brevity; assume similar to index.html */
+        body {
+            background-color: #343a40; /* Dark background */
+            color: #fff; /* Light text */
+        }
+        #wrapper {
+            display: flex;
+            width: 100%;
+        }
+        #sidebar-wrapper {
+            width: 250px;
+            background-color: #212529; /* Darker sidebar */
+            border-right: 1px solid #444;
+        }
+        .sidebar-heading {
+            padding: 1rem;
+            font-size: 1.5rem;
+            background-color: #1d2124;
+            text-align: center;
+        }
+        .list-group-item {
+            background-color: #212529;
+            color: #fff;
+            border: none;
+        }
+        .list-group-item:hover {
+            background-color: #343a40;
+        }
+        #page-content-wrapper {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .movie-grid {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .movie-card {
+            flex: 0 0 16.66%;
+            max-width: 16.66%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .movie-card img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .movie-card h5 {
+            font-size: 1rem;
+            margin-top: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .card {
+            background-color: #454d55; /* Darker cards */
+            border: none;
+            border-radius: 8px;
+        }
+        .card-body {
+            background-color: #6c757d; /* Light gray for card bodies */
+            padding: 1rem;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -15,39 +77,41 @@
     <div class="bg-dark border-right" id="sidebar-wrapper">
         <div class="sidebar-heading">My Media Collection</div>
         <div class="list-group list-group-flush">
-            <a href="/" class="list-group-item list-group-item-action">Movies</a>
-            <a href="/tv" class="list-group-item list-group-item-action">TV Shows</a>
+            <button class="list-group-item list-group-item-action" onclick="location.href='/index'">Movies</button>
+            <button class="list-group-item list-group-item-action" onclick="location.href='/tv'">TV Shows</button>
         </div>
     </div>
 
     <!-- Page Content -->
     <div id="page-content-wrapper">
         <div class="container-fluid">
-            <h1 class="my-4">TV Shows</h1>
-            
+            <h1 class="my-4">TV Show Collection</h1>
+
+            <!-- Filter and refresh controls -->
             <input type="text" id="searchInput" placeholder="Filter TV Shows..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
-                <button class="btn btn-primary" onclick="showTVShowsWithoutPoster()">Show TV Shows Without Poster</button>
-                <button class="btn btn-secondary" onclick="showAllTVShows()">Show All</button>
-                <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>
+                {% if request.path == '/tv' %}
+                <button class="btn btn-primary" onclick="filterWithoutPoster('tv')">Show TV Shows Without Poster</button>
+                {% endif %}
+                <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
 
             <!-- TV Shows grid -->
-            <div id="tvShowList" class="media-grid">
+            <div id="movieList" class="movie-grid">
                 {% for tv_show in tv_shows %}
-                <div class="media-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster }}">
+                <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster }}">
                     <div>
                         {% if tv_show.poster_thumb %}
-                        <img src="{{ tv_show.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="media-poster" onclick="triggerTVSearch('{{ tv_show.title }}')">
+                        <img src="{{ tv_show.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
                         {% elif tv_show.poster %}
-                        <img src="{{ tv_show.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="media-poster" onclick="triggerTVSearch('{{ tv_show.title }}')">
+                        <img src="{{ tv_show.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerTVSearch('{{ tv_show.title }}')">{{ tv_show.title }}</h5>
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">{{ tv_show.title }}</h5>
                 </div>
                 {% endfor %}
             </div>
@@ -56,30 +120,22 @@
 </div>
 
 <script>
-    function triggerTVSearch(title) {
+    function triggerSearch(title, contentType) {
         const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
-        window.location.href = `/search_tv?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
-    }
-
-    function showTVShowsWithoutPoster() {
-        const tvShows = document.querySelectorAll('#tvShowList .media-card');
-        tvShows.forEach(function(tvShow) {
-            const hasPoster = tvShow.getAttribute('data-has-poster').toLowerCase();
-            tvShow.style.display = (hasPoster === "true") ? 'none' : 'block';
-        });
-    }
-
-    function showAllTVShows() {
-        window.location.href = `/tv`;
+        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
     }
 
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const tvShows = document.querySelectorAll('#tvShowList .media-card');
+        const movies = document.querySelectorAll('#movieList .movie-card');
 
-        tvShows.forEach(function(tvShow) {
-            const title = tvShow.getAttribute('data-title');
-            tvShow.style.display = title.includes(query) ? 'block' : 'none';
+        movies.forEach(function(movie) {
+            const title = movie.getAttribute('data-title');
+            if (title.includes(query)) {
+                movie.style.display = 'block';
+            } else {
+                movie.style.display = 'none';
+            }
         });
     });
 </script>

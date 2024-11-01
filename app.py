@@ -107,10 +107,10 @@ def index():
     # Render the index.html template with the movie data and total count
     return render_template('index.html', movies=movies, total_movies=total_movies)
 
-# Route for displaying TV shows
+# Route for TV shows page
 @app.route('/tv')
 def tv_shows():
-    tv_shows, total_tv_shows = get_poster_thumbnails(tv_folders)
+    tv_shows, total_tv_shows = get_poster_thumbnails(tv_folders, media_type="tv")
     return render_template('tv.html', tv_shows=tv_shows)
 
 # Route to refresh index.html (if needed)
