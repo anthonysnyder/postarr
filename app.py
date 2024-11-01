@@ -102,10 +102,9 @@ def get_poster_thumbnails(base_folders=None):
 # Route for the index page
 @app.route('/')
 def index():
-    # REMOVE LATER: Temporarily load tv_folders instead of movie_folders for testing
-    movies, total_movies = get_poster_thumbnails(tv_folders)
+    movies, total_movies = get_poster_thumbnails(movie_folders)
     
-    # Render the index.html template with the TV show data and total count
+    # Render the index.html template with the movie data and total count
     return render_template('index.html', movies=movies, total_movies=total_movies)
 
 # Route to refresh index.html (if needed)
