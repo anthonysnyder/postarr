@@ -325,8 +325,8 @@ def test_tv_folders():
     return {"tv_shows": tv_shows, "total_count": total_count}
 
 # Temporary route for testing TV show search - returns JSON
-@app.route('/search_tv', methods=['GET'])
-def search_tv():
+@app.route('/search_tv_temp', methods=['GET'])
+def search_tv_temp():
     # Get the query string from the URL parameters
     query = request.args.get('query', '')
 
