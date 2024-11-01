@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Movie Collection</title>
+    <title>My Media Collection</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #343a40; /* Dark background */
-            color: #fff; /* Light text */
+            background-color: #343a40;
+            color: #fff;
         }
 
         #wrapper {
@@ -18,7 +18,7 @@
 
         #sidebar-wrapper {
             width: 250px;
-            background-color: #212529; /* Darker sidebar */
+            background-color: #212529;
             border-right: 1px solid #444;
         }
 
@@ -44,26 +44,26 @@
             padding: 20px;
         }
 
-        .movie-grid {
+        .media-grid {
             display: flex;
             flex-wrap: wrap;
         }
 
-        .movie-card {
+        .media-card {
             flex: 0 0 16.66%;
             max-width: 16.66%;
             padding: 10px;
             box-sizing: border-box;
         }
 
-        .movie-card img {
+        .media-card img {
             width: 100%;
             height: auto;
             object-fit: cover;
             border-radius: 8px;
         }
 
-        .movie-card h5 {
+        .media-card h5 {
             font-size: 1rem;
             margin-top: 10px;
             text-align: center;
@@ -71,13 +71,13 @@
         }
 
         .card {
-            background-color: #454d55; /* Darker cards */
+            background-color: #454d55;
             border: none;
             border-radius: 8px;
         }
 
         .card-body {
-            background-color: #6c757d; /* Light gray for card bodies */
+            background-color: #6c757d;
             padding: 1rem;
             border-radius: 8px;
         }
@@ -87,61 +87,59 @@
 <div id="wrapper">
     <!-- Sidebar -->
     <div class="bg-dark border-right" id="sidebar-wrapper">
-        <div class="sidebar-heading">My Movie Collection</div>
+        <div class="sidebar-heading">My Media Collection</div>
         <div class="list-group list-group-flush">
-            <a href="/" class="list-group-item list-group-item-action">Dashboard</a>
-            <a href="/movies" class="list-group-item list-group-item-action">Movies</a>
+            <button class="list-group-item list-group-item-action" onclick="showSection('movies')">Movies</button>
+            <button class="list-group-item list-group-item-action" onclick="showSection('tv')">TV Shows</button>
         </div>
     </div>
 
     <!-- Page Content -->
     <div id="page-content-wrapper">
         <div class="container-fluid">
-            <h1 class="my-4">Dashboard</h1>
-            <div class="row">
-                <div class="col-lg-3 col-md-6">
-                    <div class="card bg-light text-dark mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Movies</h5>
-                            <p class="card-text">{{ total_movies }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <h1 class="my-4" id="sectionTitle">Dashboard</h1>
 
-            <h1 class="my-4">My Movie Collection</h1>
+            <input type="text" id="filterInput" placeholder="Filter media titles..." class="form-control my-3">
 
-            <input type="text" id="searchInput" placeholder="Search for a movie on TMDb..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
-                <button class="btn btn-primary" onclick="showMoviesWithoutPoster()">Show Movies Without Poster</button>
-                <button class="btn btn-secondary" onclick="showAllMovies()">Show All</button>
+                <button class="btn btn-primary" onclick="filterWithoutPoster('movies')">Show Movies Without Poster</button>
+                <button class="btn btn-primary" onclick="filterWithoutPoster('tv')">Show TV Shows Without Poster</button>
                 <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>
             </div>
 
-            <!-- Movie grid displaying all movies -->
-            <div id="movieList" class="movie-grid">
-                {% for movie in movies %}
-                <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}" data-has-poster="{{ movie.has_poster }}">
+            <!-- Media grid displaying movies and TV shows -->
+            <div id="mediaList" class="media-grid">
+                {% for media in movies %}
+                <div class="media-card" id="{{ media.clean_id }}" data-title="{{ media.title | lower }}" data-type="movies" data-has-poster="{{ media.has_poster }}">
                     <div>
-                        {% if movie.poster_thumb %}
-                        <!-- Display the thumbnail if available -->
-                        <img src="{{ movie.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
-                        {% elif movie.poster %}
-                        <!-- Fallback to the full-resolution poster if no thumbnail -->
-                        <img src="{{ movie.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}')">
+                        {% if media.poster_thumb %}
+                        <img src="{{ media.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ media.title }}" onclick="triggerSearch('{{ media.title }}', 'movie')">
+                        {% elif media.poster %}
+                        <img src="{{ media.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ media.title }}" onclick="triggerSearch('{{ media.title }}', 'movie')">
                         {% else %}
-                        <!-- Display a placeholder if no poster is available -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}')">{{ movie.title }}</h5>
+                    <h5 onclick="triggerSearch('{{ media.title }}', 'movie')">{{ media.title }}</h5>
+                </div>
+                {% endfor %}
 
-                    <p class="text-center">
-                        <strong>Dimensions:</strong> {{ movie.poster_dimensions }} | 
-                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
-                    </p>
+                {% for media in tv_shows %}
+                <div class="media-card" id="{{ media.clean_id }}" data-title="{{ media.title | lower }}" data-type="tv" data-has-poster="{{ media.has_poster }}">
+                    <div>
+                        {% if media.poster_thumb %}
+                        <img src="{{ media.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ media.title }}" onclick="triggerSearch('{{ media.title }}', 'tv')">
+                        {% elif media.poster %}
+                        <img src="{{ media.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ media.title }}" onclick="triggerSearch('{{ media.title }}', 'tv')">
+                        {% else %}
+                        <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                            <span>No Poster</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h5 onclick="triggerSearch('{{ media.title }}', 'tv')">{{ media.title }}</h5>
                 </div>
                 {% endfor %}
             </div>
@@ -150,95 +148,36 @@
 </div>
 
 <script>
-    console.log("Script tag reached");
-
-    window.onerror = function(message, source, lineno, colno, error) {
-        console.log("Error occurred: " + message);
-        return true;
-    };
-
-    function triggerSearch(title) {
-        console.log("Clicked on:", title);
-        try {
-            const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
-            console.log(`Cleaned title: ${cleanTitle}`);
-            window.location.href = `/search?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
-        } catch (error) {
-            console.error('Error in triggerSearch:', error);
-        }
+    function triggerSearch(title, type) {
+        const encodedTitle = encodeURIComponent(title);
+        const searchUrl = type === 'movie' ? `/search?query=${encodedTitle}` : `/search_tv?query=${encodedTitle}`;
+        window.location.href = searchUrl;
     }
 
-    function showMoviesWithoutPoster() {
-    console.log('Showing movies without posters.');
-    const movies = document.querySelectorAll('#movieList .movie-card');
-    movies.forEach(function(movie) {
-        const hasPoster = movie.getAttribute('data-has-poster').toLowerCase(); // Convert to lowercase
-        if (hasPoster === "true") {
-            movie.style.display = 'none';
-        } else {
-            movie.style.display = 'block';
-        }
-    });
-}
-
-    function showAllMovies() {
-        console.log('Showing all movies.');
-        window.location.href = `/`;
+    function showSection(type) {
+        const mediaCards = document.querySelectorAll('#mediaList .media-card');
+        mediaCards.forEach(card => {
+            card.style.display = card.getAttribute('data-type') === type ? 'block' : 'none';
+        });
     }
 
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const movies = document.querySelectorAll('#movieList .movie-card');
+    function filterWithoutPoster(type) {
+        const mediaCards = document.querySelectorAll('#mediaList .media-card');
+        mediaCards.forEach(card => {
+            const hasPoster = card.getAttribute('data-has-poster') === "true";
+            const isType = card.getAttribute('data-type') === type;
+            card.style.display = !hasPoster && isType ? 'block' : 'none';
+        });
+    }
 
-        movies.forEach(function(movie) {
-            const title = movie.getAttribute('data-title');
-            if (title.includes(query)) {
-                movie.style.display = 'block';
-            } else {
-                movie.style.display = 'none';
-            }
+    document.getElementById('filterInput').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        const mediaCards = document.querySelectorAll('#mediaList .media-card');
+        mediaCards.forEach(card => {
+            const title = card.getAttribute('data-title');
+            card.style.display = title.includes(query) ? 'block' : 'none';
         });
     });
-
-    document.querySelectorAll('.movie-card').forEach(item => {
-        item.addEventListener('click', event => {
-            const title = item.querySelector('h5').textContent;
-            triggerSearch(title);
-        });
-    });
-
-    // Scroll to anchor once the page has fully loaded
-    window.onload = function() {
-        setTimeout(() => {
-            const hash = window.location.hash;
-            if (hash) {
-                let anchor = hash.slice(1);  // Get anchor without '#'
-                console.log(`Navigating to anchor: ${anchor}`);
-                
-                try {
-                    // Check all movie-card IDs on the page
-                    const allIds = Array.from(document.querySelectorAll(".movie-card")).map(el => el.id);
-
-                    // Correct anchor to match ID with year if it doesn't directly match
-                    if (!allIds.includes(anchor)) {
-                        anchor = allIds.find(id => id.startsWith(anchor));
-                    }
-
-                    const targetElement = document.getElementById(anchor);
-
-                    if (targetElement) {
-                        console.log(`Found element with ID: ${anchor}`);
-                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                        console.error(`Element with ID "${anchor}" not found.`);
-                    }
-                } catch (error) {
-                    console.error(`Error occurred while navigating to anchor: ${error.message}`);
-                }
-            }
-        }, 200);  // Delay to ensure the page fully renders before scrolling
-    };
-
 </script>
 </body>
 </html>
