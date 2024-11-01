@@ -238,6 +238,7 @@ def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
 
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
+@app.route('/select_poster', methods=['POST'])
 def select_poster():
     # Get the selected poster URL and movie title from the form submission
     poster_url = request.form['poster_path']
@@ -254,8 +255,8 @@ def select_poster():
     best_similarity = 0
     best_match_dir = None
 
-    # Search for the correct directory based on the exact movie title
-    for base_folder in base_folders:
+    # Use movie_folders specifically for handling movie posters
+    for base_folder in movie_folders:
         directories = os.listdir(base_folder)
         possible_dirs.extend(directories)  # Collect all possible directories
         for directory in directories:
@@ -273,7 +274,7 @@ def select_poster():
                     best_similarity = similarity
                     best_match_dir = os.path.join(base_folder, directory)
         if save_dir:
-            # Exit the loop if exact match is found
+            # Exit the loop if an exact match is found
             break
 
     # If an exact match was found, proceed to save the poster
