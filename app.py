@@ -45,7 +45,9 @@ def generate_clean_id(title):
     return clean_id
 
 # Function to retrieve movie directories and their associated posters for the index page
-def get_poster_thumbnails(base_folders):
+def get_poster_thumbnails(base_folders=None):
+    if base_folders is None:
+        base_folders = movie_folders  # Default to movie folders if none provided
     media_list = []
 
     # Iterate over each specified base folder (movies or TV shows)
