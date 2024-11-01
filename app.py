@@ -326,22 +326,6 @@ def test_tv_folders():
     tv_shows, total_count = get_poster_thumbnails(tv_folders)
     return {"tv_shows": tv_shows, "total_count": total_count}
 
-# Temporary route for testing TV show search - returns JSON
-@app.route('/search_tv_temp', methods=['GET'])
-def search_tv_temp():
-    # Get the query string from the URL parameters
-    query = request.args.get('query', '')
-
-    # Make a request to the TMDb API to search for TV shows matching the query
-    response = requests.get(f"{BASE_URL}/search/tv", params={"api_key": TMDB_API_KEY, "query": query, "include_adult": False, "language": "en-US", "page": 1})
-    results = response.json().get('results', [])
-
-    # Normalize TMDb titles using generate_clean_id for consistency
-    for result in results:
-        result['clean_id'] = generate_clean_id(result['name'])  # TV shows use 'name' instead of 'title'
-
-    # Return JSON response for testing
-    return {"query": query, "results": results}
 
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
