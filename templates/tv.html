@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My TV Show Collection</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Styles omitted for brevity; assume similar to index.html */
+    </style>
+</head>
+<body>
+<div id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-dark border-right" id="sidebar-wrapper">
+        <div class="sidebar-heading">My Media Collection</div>
+        <div class="list-group list-group-flush">
+            <a href="/" class="list-group-item list-group-item-action">Movies</a>
+            <a href="/tv" class="list-group-item list-group-item-action">TV Shows</a>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <h1 class="my-4">TV Shows</h1>
+            
+            <input type="text" id="searchInput" placeholder="Filter TV Shows..." class="form-control">
+            <div class="btn-group mt-2 mb-4" role="group">
+                <button class="btn btn-primary" onclick="showTVShowsWithoutPoster()">Show TV Shows Without Poster</button>
+                <button class="btn btn-secondary" onclick="showAllTVShows()">Show All</button>
+                <button onclick="location.href='/refresh'" class="btn btn-primary">Refresh</button>
+            </div>
+
+            <!-- TV Shows grid -->
+            <div id="tvShowList" class="media-grid">
+                {% for tv_show in tv_shows %}
+                <div class="media-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster }}">
+                    <div>
+                        {% if tv_show.poster_thumb %}
+                        <img src="{{ tv_show.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="media-poster" onclick="triggerTVSearch('{{ tv_show.title }}')">
+                        {% elif tv_show.poster %}
+                        <img src="{{ tv_show.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="media-poster" onclick="triggerTVSearch('{{ tv_show.title }}')">
+                        {% else %}
+                        <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                            <span>No Poster</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h5 class="mt-2 text-center" onclick="triggerTVSearch('{{ tv_show.title }}')">{{ tv_show.title }}</h5>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function triggerTVSearch(title) {
+        const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
+        window.location.href = `/search_tv?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+    }
+
+    function showTVShowsWithoutPoster() {
+        const tvShows = document.querySelectorAll('#tvShowList .media-card');
+        tvShows.forEach(function(tvShow) {
+            const hasPoster = tvShow.getAttribute('data-has-poster').toLowerCase();
+            tvShow.style.display = (hasPoster === "true") ? 'none' : 'block';
+        });
+    }
+
+    function showAllTVShows() {
+        window.location.href = `/tv`;
+    }
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const tvShows = document.querySelectorAll('#tvShowList .media-card');
+
+        tvShows.forEach(function(tvShow) {
+            const title = tvShow.getAttribute('data-title');
+            tvShow.style.display = title.includes(query) ? 'block' : 'none';
+        });
+    });
+</script>
+</body>
+</html>
