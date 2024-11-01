@@ -346,6 +346,9 @@ def search_tv_temp():
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
 def serve_poster(filename):
+    # Define base folders explicitly for this function
+    base_folders = movie_folders  # Default to movie folders for now
+
     # Check if a "refresh" flag is present in the URL query parameters
     refresh = request.args.get('refresh', 'false')
     for base_folder in base_folders:
