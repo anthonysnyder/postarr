@@ -144,9 +144,6 @@
             }
         });
     });
-    <!-- Your existing HTML structure -->
-
-    // Function to filter and display only items without posters
     function filterWithoutPoster(mediaType) {
         const mediaCards = document.querySelectorAll(`#${mediaType}List .movie-card`);
         mediaCards.forEach(card => {
@@ -154,6 +151,7 @@
             card.style.display = hasPoster ? 'none' : 'block';
         });
     }
+</script>
 </script>
 </body>
 </html>

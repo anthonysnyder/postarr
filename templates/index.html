@@ -142,14 +142,14 @@
             }
         });
     });
-
-    // Function to filter and display only items without posters
-    function filterWithoutPoster(movieList) {
+    function filterWithoutPoster(mediaType) {
         const mediaCards = document.querySelectorAll(`#${mediaType}List .movie-card`);
         mediaCards.forEach(card => {
             const hasPoster = card.getAttribute('data-has-poster') === 'true';
             card.style.display = hasPoster ? 'none' : 'block';
         });
+    }
+</script>
 </script>
 </body>
 </html>
