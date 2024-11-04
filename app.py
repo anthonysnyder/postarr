@@ -378,6 +378,50 @@ def confirm_directory():
     selected_directory = request.form['selected_directory']
     movie_title = request.form['movie_title']
     poster_url = request.form['poster_path']
+
+    # Define the media type based on the request path (movie or tv)
+    media_type = request.form.get('media_type', 'movie')
+    base_folders = movie_folders if media_type == 'movie' else tv_folders
+
+    # Debug: Print selected directory and media type for troubleshooting
+    print(f"DEBUG: Selected Directory - {selected_directory}")
+    print(f"DEBUG: Media Type - {media_type}")
+    print(f"DEBUG: Base Folders - {base_folders}")
+
+    # Construct the save directory path based on the selected directory
+    save_dir = None
+    for base_folder in base_folders:
+        potential_dir = os.path.join(base_folder, selected_directory)
+        
+        # Debug: Print the potential directory path for troubleshooting
+        print(f"DEBUG: Checking potential directory - {potential_dir}")
+
+        if os.path.exists(potential_dir):
+            save_dir = potential_dir
+            break
+
+    if not save_dir:
+        # Directory not found, log an error and return 404
+        print(f"ERROR: Directory not found for '{selected_directory}' in base folders.")
+        return "Directory not found", 404
+
+    # Save the poster and get the local path
+    local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+    if local_poster_path:
+        # Send Slack notification with the local path
+        message = f"Poster for '{movie_title}' has been downloaded!"
+        send_slack_notification(message, local_poster_path, poster_url)
+    else:
+        print(f"Failed to save poster for '{movie_title}'")
+
+    # Generate clean_id for navigation
+    anchor = generate_clean_id(movie_title)
+    # Redirect back to the index page with an anchor to the selected movie
+    return redirect(url_for('index') + f"#{anchor}")
+    # Get the selected directory and other details from the form submission
+    selected_directory = request.form['selected_directory']
+    movie_title = request.form['movie_title']
+    poster_url = request.form['poster_path']
     media_type = request.form.get('media_type', 'movies')  # Default to 'movies'
 
     # Choose the correct base folders
