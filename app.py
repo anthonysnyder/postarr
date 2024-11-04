@@ -380,6 +380,9 @@ def confirm_directory():
     poster_url = request.form['poster_path']
     content_type = request.form.get('content_type', 'movie')  # Default to 'movie' if content_type isn't provided
 
+    # Log to check if content_type is correctly read
+    print(f"Content Type: {content_type}")
+
     # Construct the save directory path based on the selected directory
     save_dir = None
     base_folders = movie_folders if content_type == 'movie' else tv_folders
@@ -407,9 +410,15 @@ def confirm_directory():
     anchor = generate_clean_id(movie_title)
     
     # Determine redirect URL based on content type
-    redirect_url = url_for('index') if content_type == 'movie' else url_for('tv_shows')
-    return redirect(f"{redirect_url}#{anchor}")
+    if content_type == 'movie':
+        redirect_url = url_for('index')
+    else:
+        redirect_url = url_for('tv_shows')
 
+    # Log to verify the constructed redirect URL
+    print(f"Redirect URL: {redirect_url}#{anchor}")
+
+    return redirect(f"{redirect_url}#{anchor}")
 # Function to send Slack notifications (if a webhook URL is configured)
 def send_slack_notification(message, local_poster_path, poster_url):
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
