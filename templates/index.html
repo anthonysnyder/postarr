@@ -96,7 +96,7 @@
 
             <!-- Movie grid -->
             <div id="movieList" class="movie-grid">
-                {% for media in media_list %}
+                {% for movie in movies %}
                 <div class="movie-card" id="{{ media.clean_id }}" data-title="{{ media.title | lower }}" data-has-poster="{{ media.has_poster }}">
                     <div>
                         {% if media.poster_thumb %}
@@ -117,7 +117,6 @@
                         <strong>Last Modified:</strong> {{ media.poster_last_modified }}
                     </p>
                 </div>
-                {% endfor %}
                 {% endfor %}
             </div>
         </div>
