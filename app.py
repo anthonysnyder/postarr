@@ -120,7 +120,7 @@ def refresh():
     return redirect(url_for('index'))
 
 # Route for searching movies using TMDb API
-@app.route('/search', methods=['GET'])
+@app.route('/search_movie', methods=['GET'])
 def search_movie():
     # Get the query string from the URL parameters
     query = request.args.get('query', '')
