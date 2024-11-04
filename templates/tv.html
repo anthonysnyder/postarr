@@ -112,6 +112,12 @@
                         {% endif %}
                     </div>
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">{{ tv_show.title }}</h5>
+                    
+                    <!-- Display Resolution and Date Modified -->
+                    <p class="text-center">
+                        <strong>Resolution:</strong> {{ movie.poster_dimensions }}<br>
+                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
+                    </p>
                 </div>
                 {% endfor %}
             </div>
