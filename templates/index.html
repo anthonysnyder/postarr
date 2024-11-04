@@ -77,7 +77,7 @@
     <div class="bg-dark border-right" id="sidebar-wrapper">
         <div class="sidebar-heading">My Media Collection</div>
         <div class="list-group list-group-flush">
-            <button class="list-group-item list-group-item-action" onclick="location.href='/index'">Movies</button>
+            <button class="list-group-item list-group-item-action" onclick="location.href='/'">Movies</button>
             <button class="list-group-item list-group-item-action" onclick="location.href='/tv'">TV Shows</button>
         </div>
     </div>
@@ -97,24 +97,24 @@
             <!-- Movie grid -->
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <div class="movie-card" id="{{ media.clean_id }}" data-title="{{ media.title | lower }}" data-has-poster="{{ media.has_poster }}">
+                <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}" data-has-poster="{{ movie.has_poster }}">
                     <div>
-                        {% if media.poster_thumb %}
-                        <img src="{{ media.poster_thumb }}" alt="{{ media.title }}" class="movie-poster" onclick="triggerSearch('{{ media.title }}')">
-                        {% elif media.poster %}
-                        <img src="{{ media.poster }}" alt="{{ media.title }}" class="movie-poster" onclick="triggerSearch('{{ media.title }}')">
+                        {% if movie.poster_thumb %}
+                        <img src="{{ movie.poster_thumb }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}', 'movie')">
+                        {% elif movie.poster %}
+                        <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}', 'movie')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ media.title }}')">{{ media.title }}</h5>
-                
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}', 'movie')">{{ movie.title }}</h5>
+            
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
-                        <strong>Dimensions:</strong> {{ media.poster_dimensions }} | 
-                        <strong>Last Modified:</strong> {{ media.poster_last_modified }}
+                        <strong>Dimensions:</strong> {{ movie.poster_dimensions }} | 
+                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
                     </p>
                 </div>
                 {% endfor %}
