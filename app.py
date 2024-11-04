@@ -373,14 +373,16 @@ def serve_poster(filename):
 
 # Route for confirming the directory and saving the poster (used when manual selection is required)    # Get the selected directory and other details from the form submission
 @app.route('/confirm_directory', methods=['POST'])
+# Route for confirming the directory and saving the poster (used when manual selection is required)
+@app.route('/confirm_directory', methods=['POST'])
 def confirm_directory():
-    # Get the selected directory and other details from the form submission
+    # Get the selected directory, content type, and other details from the form submission
     selected_directory = request.form['selected_directory']
-    media_title = request.form['media_title']
-    content_type = request.form.get('content_type', 'movie')  # Defaults to "movie" if not specified
+    movie_title = request.form['movie_title']
     poster_url = request.form['poster_path']
+    content_type = request.form.get('content_type', 'movie')  # Default to 'movie' if not provided
 
-    # Determine the save directory (similar logic for movies and TV shows)
+    # Construct the save directory path based on the selected directory and content type
     save_dir = None
     base_folders = movie_folders if content_type == 'movie' else tv_folders
 
@@ -395,18 +397,20 @@ def confirm_directory():
         return "Directory not found", 404
 
     # Save the poster and get the local path
-    local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
+    local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
     if local_poster_path:
         # Send Slack notification with the local path
-        message = f"Poster for '{media_title}' has been downloaded!"
+        message = f"Poster for '{movie_title}' has been downloaded!"
         send_slack_notification(message, local_poster_path, poster_url)
     else:
-        print(f"Failed to save poster for '{media_title}'")
+        print(f"Failed to save poster for '{movie_title}'")
 
-    # Generate clean_id for navigation and redirect to the correct section
-    anchor = generate_clean_id(media_title)
-    redirect_url = 'index' if content_type == 'movie' else 'tv_shows'
-    return redirect(url_for(redirect_url) + f"#{anchor}")
+    # Generate clean_id for navigation based on content type
+    anchor = generate_clean_id(movie_title)
+    redirect_url = url_for('index') if content_type == 'movie' else url_for('tv_shows')
+    
+    # Redirect to the appropriate page with anchor
+    return redirect(redirect_url + f"#{anchor}")
 
 # Function to send Slack notifications (if a webhook URL is configured)
 def send_slack_notification(message, local_poster_path, poster_url):
