@@ -416,7 +416,7 @@ def confirm_directory():
         redirect_url = url_for('tv_shows')
 
     # Log to verify the constructed redirect URL
-    print(f"Redirect URL: {redirect_url}#{anchor}" flush=True)
+    print(f"Redirect URL: {redirect_url}#{anchor}", flush=True)
 
     return redirect(f"{redirect_url}#{anchor}")
 # Function to send Slack notifications (if a webhook URL is configured)
