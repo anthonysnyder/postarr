@@ -378,6 +378,10 @@ def confirm_directory():
     selected_directory = request.form['selected_directory']
     movie_title = request.form['movie_title']
     poster_url = request.form['poster_path']
+    media_type = request.form.get('media_type', 'movies')  # Default to 'movies'
+
+    # Choose the correct base folders
+    base_folders = movie_folders if media_type == 'movies' else tv_folders
 
     # Construct the save directory path based on the selected directory
     save_dir = None
@@ -404,7 +408,6 @@ def confirm_directory():
     anchor = generate_clean_id(movie_title)
     # Redirect back to the index page with an anchor to the selected movie
     return redirect(url_for('index') + f"#{anchor}")
-
 # Function to send Slack notifications (if a webhook URL is configured)
 def send_slack_notification(message, local_poster_path, poster_url):
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
