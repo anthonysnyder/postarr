@@ -144,6 +144,19 @@
             }
         });
     });
+    <!-- Your existing HTML structure -->
+
+    // Function to filter and display only items without posters
+    function filterWithoutPoster(movieList) {
+        const mediaCards = document.querySelectorAll(`#${mediaType}List .movie-card`);
+        mediaCards.forEach(card => {
+            const hasPoster = card.getAttribute('data-has-poster') === 'true';
+            card.style.display = hasPoster ? 'none' : 'block';
+        });
+    }
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
