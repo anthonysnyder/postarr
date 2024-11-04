@@ -343,8 +343,8 @@ def test_tv_folders():
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
 def serve_poster(filename):
-    # Define base folders explicitly for this function
-    base_folders = movie_folders  # Default to movie folders for now
+    # Combine movie and tv folders to search both sets of paths
+    base_folders = movie_folders + tv_folders  # Check both movie and TV folders
 
     # Check if a "refresh" flag is present in the URL query parameters
     refresh = request.args.get('refresh', 'false')
@@ -365,6 +365,9 @@ def serve_poster(filename):
                 # If no refresh is requested, set cache headers for 1 year
                 response.cache_control.max_age = 31536000  # 1 year in seconds
             return response  # Return the response with the file
+
+    # Log an error message if the file is not found
+    app.logger.error(f"File not found for {filename} in any base folder.")
     # If the file doesn't exist, return a 404 error
     return "File not found", 404
 
