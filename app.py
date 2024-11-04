@@ -376,43 +376,38 @@ def serve_poster(filename):
 def confirm_directory():
     # Get the selected directory and other details from the form submission
     selected_directory = request.form['selected_directory']
-    movie_title = request.form['movie_title']
+    media_title = request.form['media_title']
+    content_type = request.form.get('content_type', 'movie')  # Defaults to "movie" if not specified
     poster_url = request.form['poster_path']
 
-    # Debug: Print selected directory and media details
-    print(f"DEBUG: Selected Directory: {selected_directory}")
-    print(f"DEBUG: Movie Title: {movie_title}")
-    print(f"DEBUG: Poster URL: {poster_url}")
-
-    # Construct the save directory path based on the selected directory
+    # Determine the save directory (similar logic for movies and TV shows)
     save_dir = None
-    for base_folder in movie_folders + tv_folders:  # Loop through both movies and TV folders
-        print(f"DEBUG: Checking in base folder: {base_folder}")
-        try:
-            directories = os.listdir(base_folder)
-            if selected_directory in directories:
-                save_dir = os.path.join(base_folder, selected_directory)
-                print(f"DEBUG: Found match - Save directory: {save_dir}")
-                break
-        except Exception as e:
-            print(f"DEBUG: Error accessing base folder {base_folder}: {e}")
+    base_folders = movie_folders if content_type == 'movie' else tv_folders
+
+    for base_folder in base_folders:
+        if selected_directory in os.listdir(base_folder):
+            save_dir = os.path.join(base_folder, selected_directory)
+            break
 
     if not save_dir:
         # Directory not found, log an error and return 404
-        print(f"ERROR: Selected directory '{selected_directory}' not found in base folders.")
+        print(f"Selected directory '{selected_directory}' not found in base folders.")
         return "Directory not found", 404
 
-    # Continue with the rest of the function as normal
-    local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+    # Save the poster and get the local path
+    local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
     if local_poster_path:
-        message = f"Poster for '{movie_title}' has been downloaded!"
+        # Send Slack notification with the local path
+        message = f"Poster for '{media_title}' has been downloaded!"
         send_slack_notification(message, local_poster_path, poster_url)
     else:
-        print(f"Failed to save poster for '{movie_title}'")
+        print(f"Failed to save poster for '{media_title}'")
 
-    # Generate clean_id for navigation
-    anchor = generate_clean_id(movie_title)
-    return redirect(url_for('index') + f"#{anchor}")
+    # Generate clean_id for navigation and redirect to the correct section
+    anchor = generate_clean_id(media_title)
+    redirect_url = 'index' if content_type == 'movie' else 'tv_shows'
+    return redirect(url_for(redirect_url) + f"#{anchor}")
+
 # Function to send Slack notifications (if a webhook URL is configured)
 def send_slack_notification(message, local_poster_path, poster_url):
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
