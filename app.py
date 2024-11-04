@@ -409,7 +409,7 @@ def confirm_directory():
     # Determine redirect URL based on content type
     redirect_url = url_for('index') if content_type == 'movie' else url_for('tv_shows')
     return redirect(f"{redirect_url}#{anchor}")
-`
+
 # Function to send Slack notifications (if a webhook URL is configured)
 def send_slack_notification(message, local_poster_path, poster_url):
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
