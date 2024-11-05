@@ -90,7 +90,7 @@
             <!-- Filter and refresh controls -->
             <input type="text" id="searchInput" placeholder="Filter Movies..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
-                <button class="btn btn-primary" onclick="filterWithoutPoster('movieList')">Show Movies Without Poster</button>
+                <button class="btn btn-primary" onclick="showMediaWithoutPoster('movie')">Show Movies Without Poster</button>
                 <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
 
@@ -142,11 +142,19 @@
     });
 
     // Function to show only items without posters
-    function filterWithoutPoster(mediaType) {
-        const mediaCards = document.querySelectorAll(`#${mediaType} .movie-card`);
-        mediaCards.forEach(card => {
-            const hasPoster = card.getAttribute('data-has-poster') === 'true';
-            card.style.display = hasPoster ? 'none' : 'block';
+    function showMediaWithoutPoster(mediaType) {
+    console.log(`Showing ${mediaType} without posters.`);
+    const mediaItems = document.querySelectorAll(`#${mediaType}List .movie-card`);
+
+    mediaItems.forEach(function(item) {
+        const hasPoster = item.getAttribute('data-has-poster');
+        console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+        
+        if (hasPoster === "true") {
+            item.style.display = 'none';
+        } else {
+            item.style.display = 'block';
+        }
     });
 }
 </script>
