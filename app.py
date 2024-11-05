@@ -6,6 +6,8 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from difflib import get_close_matches, SequenceMatcher  # For string similarity
 from PIL import Image  # For image processing
 from datetime import datetime  # For handling dates and times
+from urllib.parse import unquote
+
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -139,8 +141,8 @@ def search_movie():
 # Route for searching TV shows using TMDb API
 @app.route('/search_tv', methods=['GET'])
 def search_tv():
-    # Get the query string from the URL parameters
-    query = request.args.get('query', '')
+    # Decode the query string from the URL parameters
+    query = unquote(request.args.get('query', ''))
 
     # Make a request to the TMDb API to search for TV shows matching the query
     response = requests.get(f"{BASE_URL}/search/tv", params={"api_key": TMDB_API_KEY, "query": query, "include_adult": False, "language": "en-US", "page": 1})

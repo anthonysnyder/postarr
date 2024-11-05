@@ -151,6 +151,12 @@
             card.style.display = hasPoster ? 'none' : 'block';
         });
     }
+    function triggerSearch(title, contentType) {
+        const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
+        const encodedTitle = encodeURIComponent(cleanTitle); // Properly encode the title
+        window.location.href = `/search_${contentType}?query=${encodedTitle.toLowerCase()}`;
+    }
+</script>
 </script>
 </script>
 </body>
