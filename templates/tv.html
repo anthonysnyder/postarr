@@ -150,10 +150,11 @@
         const hasPoster = item.getAttribute('data-has-poster');
         console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
         
+        // Show only items without posters
         if (hasPoster === "true") {
-            item.style.display = 'none';
-        } else {
-            item.style.display = 'block';
+            item.style.display = 'none';  // Hide items that have posters
+        } else { 
+            item.style.display = 'block';  // Show items that don’t have posters
         }
     });
 }
