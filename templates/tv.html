@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #343a40;
-            color: #fff;
+            background-color: #343a40; /* Dark background */
+            color: #fff; /* Light text */
         }
         #wrapper {
             display: flex;
@@ -16,7 +16,7 @@
         }
         #sidebar-wrapper {
             width: 250px;
-            background-color: #212529;
+            background-color: #212529; /* Darker sidebar */
             border-right: 1px solid #444;
         }
         .sidebar-heading {
@@ -60,12 +60,12 @@
             cursor: pointer;
         }
         .card {
-            background-color: #454d55;
+            background-color: #454d55; /* Darker cards */
             border: none;
             border-radius: 8px;
         }
         .card-body {
-            background-color: #6c757d;
+            background-color: #6c757d; /* Light gray for card bodies */
             padding: 1rem;
             border-radius: 8px;
         }
@@ -102,16 +102,18 @@
                 <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster }}">
                     <div>
                         {% if tv_show.poster_thumb %}
-                        <img src="{{ tv_show.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title | replace("'", "&#39;") }}', 'tv')">
+                        <img src="{{ tv_show.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
                         {% elif tv_show.poster %}
-                        <img src="{{ tv_show.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title | replace("'", "&#39;") }}', 'tv')">
+                        <img src="{{ tv_show.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title | replace("'", "&#39;") }}', 'tv')">{{ tv_show.title }}</h5>
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">{{ tv_show.title }}</h5>
+                    
+                   <!-- Inside tv.html, where you display poster details -->
                     <p class="text-center">
                         <strong>Resolution:</strong> {{ tv_show.poster_dimensions }}<br>
                         <strong>Last Modified:</strong> {{ tv_show.poster_last_modified }}
@@ -124,13 +126,15 @@
 </div>
 
 <script>
+    // Function to trigger a search by navigating to the appropriate search route based on content type.
     function triggerSearch(title, contentType) {
-        // Encode title and contentType for URL safety
-        const cleanTitle = encodeURIComponent(title);
-        window.location.href = `/search_${contentType}?query=${cleanTitle}`;
+        // Escape any single quotes in titles to avoid syntax errors
+        const cleanTitle = title.replace(/'/g, "\\'");
+        // Encode title and content type for safe URL usage
+        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle)}`;
     }
 
-    // Consolidated search filtering function
+    // Filter function to show only items that match the search query in the input field
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const items = document.querySelectorAll('#movieList .movie-card');
@@ -141,7 +145,7 @@
         });
     });
 
-    // Filter to show only items without posters
+    // Function to filter out items without posters when clicking "Show TV Shows Without Poster" button
     function filterWithoutPoster(mediaType) {
         const mediaCards = document.querySelectorAll(`#${mediaType}List .movie-card`);
         mediaCards.forEach(card => {
