@@ -150,8 +150,8 @@ function showMediaWithoutPoster(mediaType) {
         const hasPoster = item.getAttribute('data-has-poster');
         console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
 
-        // Hide items that have posters and show items that don't have posters
-        if (hasPoster === "true") {
+        // Convert hasPoster to string explicitly to ensure proper comparison
+        if (String(hasPoster) === "true") {
             item.style.display = 'none';  // Hide items with posters
         } else {
             item.style.display = 'block';  // Show items without posters
