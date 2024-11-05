@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #343a40; /* Dark background */
-            color: #fff; /* Light text */
+            background-color: #343a40;
+            color: #fff;
         }
         #wrapper {
             display: flex;
@@ -16,7 +16,7 @@
         }
         #sidebar-wrapper {
             width: 250px;
-            background-color: #212529; /* Darker sidebar */
+            background-color: #212529;
             border-right: 1px solid #444;
         }
         .sidebar-heading {
@@ -60,12 +60,12 @@
             cursor: pointer;
         }
         .card {
-            background-color: #454d55; /* Darker cards */
+            background-color: #454d55;
             border: none;
             border-radius: 8px;
         }
         .card-body {
-            background-color: #6c757d; /* Light gray for card bodies */
+            background-color: #6c757d;
             padding: 1rem;
             border-radius: 8px;
         }
@@ -102,9 +102,9 @@
                 <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster }}">
                     <div>
                         {% if tv_show.poster_thumb %}
-                        <img src="{{ tv_show.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
+                        <img src="{{ tv_show.poster_thumb }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title | replace("'", "&#39;") }}', 'tv')">
                         {% elif tv_show.poster %}
-                        <img src="{{ tv_show.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
+                        <img src="{{ tv_show.poster }}{% if request.args.get('refresh') %}?refresh=true{% endif %}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title | replace("'", "&#39;") }}', 'tv')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
@@ -112,8 +112,6 @@
                         {% endif %}
                     </div>
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title | replace("'", "&#39;") }}', 'tv')">{{ tv_show.title }}</h5>
-                    
-                   <!-- Inside tv.html, where you display poster details -->
                     <p class="text-center">
                         <strong>Resolution:</strong> {{ tv_show.poster_dimensions }}<br>
                         <strong>Last Modified:</strong> {{ tv_show.poster_last_modified }}
@@ -127,8 +125,8 @@
 
 <script>
     function triggerSearch(title, contentType) {
-        const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
-        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+        const cleanTitle = encodeURIComponent(title.replace(/\(\d{4}\)/, '').trim());
+        window.location.href = `/search_${contentType}?query=${cleanTitle}`;
     }
 
     document.getElementById('searchInput').addEventListener('keyup', function() {
@@ -151,15 +149,6 @@
             card.style.display = hasPoster ? 'none' : 'block';
         });
     }
-    function triggerSearch(title, contentType) {
-        const cleanTitle = encodeURIComponent(title.replace(/\(\d{4}\)/, '').trim());
-        window.location.href = `/search_${contentType}?query=${cleanTitle}`;
-    }
-</script>
-</script>
-</script>
-</body>
-</html>
 </script>
 </body>
 </html>
