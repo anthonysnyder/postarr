@@ -90,7 +90,7 @@
             <!-- Filter and refresh controls -->
             <input type="text" id="searchInput" placeholder="Filter Movies..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
-                <button class="btn btn-primary" onclick="filterWithoutPoster('movies')">Show Movies Without Poster</button>
+                <button class="btn btn-primary" onclick="filterWithoutPoster('movieList')">Show Movies Without Poster</button>
                 <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
 
@@ -124,32 +124,31 @@
 </div>
 
 <script>
+    // Function to trigger search
     function triggerSearch(title, contentType) {
         const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
     }
 
+    // Filter function to show only matching search query items
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const movies = document.querySelectorAll('#movieList .movie-card');
 
         movies.forEach(function(movie) {
             const title = movie.getAttribute('data-title');
-            if (title.includes(query)) {
-                movie.style.display = 'block';
-            } else {
-                movie.style.display = 'none';
-            }
+            movie.style.display = title.includes(query) ? 'block' : 'none';
         });
     });
-    function filterWithoutPoster(mediaType) {
-        const mediaCards = document.querySelectorAll(`#${mediaType}List .movie-card`);
+
+    // Function to show only items without posters
+    function filterWithoutPoster(listId) {
+        const mediaCards = document.querySelectorAll(`#${listId} .movie-card`);
         mediaCards.forEach(card => {
             const hasPoster = card.getAttribute('data-has-poster') === 'true';
             card.style.display = hasPoster ? 'none' : 'block';
         });
     }
-</script>
 </script>
 </body>
 </html>
