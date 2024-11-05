@@ -125,23 +125,23 @@
 
 <script>
     function triggerSearch(title, contentType) {
-        const cleanTitle = encodeURIComponent(title.replace(/\(\d{4}\)/, '').trim());
+        // Encode title and contentType for URL safety
+        const cleanTitle = encodeURIComponent(title);
         window.location.href = `/search_${contentType}?query=${cleanTitle}`;
     }
 
+    // Consolidated search filtering function
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const movies = document.querySelectorAll('#movieList .movie-card');
+        const items = document.querySelectorAll('#movieList .movie-card');
 
-        movies.forEach(function(movie) {
-            const title = movie.getAttribute('data-title');
-            if (title.includes(query)) {
-                movie.style.display = 'block';
-            } else {
-                movie.style.display = 'none';
-            }
+        items.forEach(function(item) {
+            const title = item.getAttribute('data-title');
+            item.style.display = title.includes(query) ? 'block' : 'none';
         });
     });
+
+    // Filter to show only items without posters
     function filterWithoutPoster(mediaType) {
         const mediaCards = document.querySelectorAll(`#${mediaType}List .movie-card`);
         mediaCards.forEach(card => {
