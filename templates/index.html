@@ -141,19 +141,20 @@
         });
     });
 
-    // Function to show only items without posters
-    function showMediaWithoutPoster(mediaType) {
+// Function to show only items without posters
+function showMediaWithoutPoster(mediaType) {
     console.log(`Showing ${mediaType} without posters.`);
     const mediaItems = document.querySelectorAll(`#${mediaType}List .movie-card`);
 
     mediaItems.forEach(function(item) {
         const hasPoster = item.getAttribute('data-has-poster');
         console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
-        
+
+        // Hide items that have posters and show items that don't have posters
         if (hasPoster === "true") {
-            item.style.display = 'none';
+            item.style.display = 'none';  // Hide items with posters
         } else {
-            item.style.display = 'block';
+            item.style.display = 'block';  // Show items without posters
         }
     });
 }
