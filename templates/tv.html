@@ -111,7 +111,9 @@
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">{{ tv_show.title }}</h5>
+                    <h5 class="mt-2 text-center" onclick="triggerSearch(&quot;{{ tv_show.title }}&quot;, 'tv')">
+                        {{ tv_show.title }}
+                    </h5>
                     
                    <!-- Inside tv.html, where you display poster details -->
                     <p class="text-center">
