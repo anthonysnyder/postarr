@@ -141,18 +141,17 @@ def search_movie():
 # Route for searching TV shows using TMDb API
 @app.route('/search_tv', methods=['GET'])
 def search_tv():
-    # Decode the query string from the URL parameters
+    # Decode query to handle any encoded characters
     query = unquote(request.args.get('query', ''))
 
-    # Make a request to the TMDb API to search for TV shows matching the query
+    # Make a request to the TMDb API
     response = requests.get(f"{BASE_URL}/search/tv", params={"api_key": TMDB_API_KEY, "query": query, "include_adult": False, "language": "en-US", "page": 1})
     results = response.json().get('results', [])
 
-    # Normalize TMDb titles using generate_clean_id for consistency
+    # Normalize TMDb titles
     for result in results:
-        result['clean_id'] = generate_clean_id(result['name'])  # TV shows use 'name' instead of 'title'
+        result['clean_id'] = generate_clean_id(result['name'])
 
-    # Render the search_results.html template with the TV shows found
     return render_template('search_results.html', query=query, results=results, content_type="tv")
 
 # Route for selecting a movie and displaying available posters

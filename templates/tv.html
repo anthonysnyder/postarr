@@ -152,9 +152,9 @@
         });
     }
     function triggerSearch(title, contentType) {
-        const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
-        const encodedTitle = encodeURIComponent(cleanTitle); // Properly encode the title
-        window.location.href = `/search_${contentType}?query=${encodedTitle.toLowerCase()}`;
+        const cleanTitle = encodeURIComponent(title.replace(/\(\d{4}\)/, '').trim());
+        window.location.href = `/search_${contentType}?query=${cleanTitle}`;
+    }
     }
 </script>
 </script>
