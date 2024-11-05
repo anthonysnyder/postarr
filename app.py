@@ -287,6 +287,9 @@ def select_poster():
     # Normalize the title for comparison
     normalized_movie_title = normalize_title(movie_title)
 
+    # Determine media type and set the appropriate folders
+    media_type = None
+
     # Search for the correct directory based on the exact title
     for base_folder in movie_folders + tv_folders:  # Searching in both movie and TV folders
         directories = os.listdir(base_folder)
@@ -296,6 +299,7 @@ def select_poster():
             # Check for an exact match
             if directory == movie_title:
                 save_dir = os.path.join(base_folder, directory)
+                media_type = 'tv' if base_folder in tv_folders else 'movie'
                 break
             else:
                 # Calculate similarity between normalized titles
@@ -306,6 +310,7 @@ def select_poster():
                 if similarity > best_similarity:
                     best_similarity = similarity
                     best_match_dir = os.path.join(base_folder, directory)
+                    media_type = 'tv' if base_folder in tv_folders else 'movie'
 
         if save_dir:  # Exit loop if exact match is found
             break
@@ -317,7 +322,9 @@ def select_poster():
             # Send Slack notification for saved poster
             message = f"Poster for '{movie_title}' has been downloaded!"
             send_slack_notification(message, local_poster_path, poster_url)
-        return redirect(url_for('index') + f"#{generate_clean_id(movie_title)}")
+        # Redirect to the appropriate page based on media type with anchor
+        redirect_url = '/tv' if media_type == 'tv' else '/'
+        return redirect(f"{redirect_url}#{generate_clean_id(movie_title)}")
 
     # Check best match similarity threshold
     similarity_threshold = 0.8  # Threshold for an automatic match
@@ -327,7 +334,9 @@ def select_poster():
         if local_poster_path:
             message = f"Poster for '{movie_title}' has been downloaded!"
             send_slack_notification(message, local_poster_path, poster_url)
-        return redirect(url_for('index') + f"#{generate_clean_id(movie_title)}")
+        # Redirect to the appropriate page based on media type with anchor
+        redirect_url = '/tv' if media_type == 'tv' else '/'
+        return redirect(f"{redirect_url}#{generate_clean_id(movie_title)}")
 
     # If no suitable match, present manual selection options
     similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
