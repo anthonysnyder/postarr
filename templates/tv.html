@@ -110,12 +110,12 @@
                         {% endif %}
                     </div>
                     <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">{{ tv_show.title }}</h5>
-                    
+            
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
-                        <strong>Resolution:</strong> {{ tv_show.poster_dimensions }}<br>
+                        <strong>Dimensions:</strong> {{ tv_show.poster_dimensions }} | 
                         <strong>Last Modified:</strong> {{ tv_show.poster_last_modified }}
-                    </p>    
+                    </p>
                 </div>
                 {% endfor %}
             </div>
@@ -124,7 +124,7 @@
 </div>
 
 <script>
-    // Function to trigger search by navigating to the correct search route based on content type
+    // Function to trigger search
     function triggerSearch(title, contentType) {
         const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
@@ -133,31 +133,31 @@
     // Filter function to show only matching search query items
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const items = document.querySelectorAll('#tvList .movie-card');
+        const tvShows = document.querySelectorAll('#tvList .movie-card');
 
-        items.forEach(function(item) {
-            const title = item.getAttribute('data-title');
-            item.style.display = title.includes(query) ? 'block' : 'none';
+        tvShows.forEach(function(tvShow) {
+            const title = tvShow.getAttribute('data-title');
+            tvShow.style.display = title.includes(query) ? 'block' : 'none';
         });
     });
 
-// Function to show only items without posters
-function showMediaWithoutPoster(mediaType) {
-    console.log(`Showing ${mediaType} without posters.`);
-    const mediaItems = document.querySelectorAll(`#${mediaType}List .movie-card`);
+    // Function to show only items without posters
+    function showMediaWithoutPoster(mediaType) {
+        console.log(`Showing ${mediaType} without posters.`);
+        const mediaItems = document.querySelectorAll(`#${mediaType}List .movie-card`);
 
-    mediaItems.forEach(function(item) {
-        const hasPoster = item.getAttribute('data-has-poster');
-        console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+        mediaItems.forEach(function(item) {
+            const hasPoster = item.getAttribute('data-has-poster');
+            console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
 
-        // Convert hasPoster to string explicitly to ensure proper comparison
-        if (String(hasPoster) === "true") {
-            item.style.display = 'none';  // Hide items with posters
-        } else {
-            item.style.display = 'block';  // Show items without posters
-        }
-    });
-}
+            // Convert hasPoster to string explicitly to ensure proper comparison
+            if (String(hasPoster) === "true") {
+                item.style.display = 'none';  // Hide items with posters
+            } else {
+                item.style.display = 'block';  // Show items without posters
+            }
+        });
+    }
 </script>
 </body>
 </html>

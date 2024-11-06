@@ -275,80 +275,62 @@ def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
-    # Get the selected poster URL and movie/TV title from the form submission
+    # Get the selected poster URL and media title from the form submission
     poster_url = request.form['poster_path']
-    movie_title = request.form['movie_title']
+    media_title = request.form['media_title']
+    media_type = request.form['media_type']  # Expect 'movie' or 'tv' as input
+
+    # Choose the appropriate base folders based on media type
+    base_folders = movie_folders if media_type == 'movie' else tv_folders
 
     # Initialize variables for similarity search
     save_dir = None
     possible_dirs = []
-    best_similarity = 0  # Initialize with a default value
+    best_similarity = 0
     best_match_dir = None
 
     # Normalize the title for comparison
-    normalized_movie_title = normalize_title(movie_title)
-
-    # Determine media type and set the appropriate folders
-    media_type = None
+    normalized_media_title = normalize_title(media_title)
 
     # Search for the correct directory based on the exact title
-    for base_folder in movie_folders + tv_folders:  # Searching in both movie and TV folders
+    for base_folder in base_folders:
         directories = os.listdir(base_folder)
-        possible_dirs.extend(directories)  # Collect all possible directories
+        possible_dirs.extend(directories)
 
         for directory in directories:
-            # Check for an exact match
-            if directory == movie_title:
+            if directory == media_title:
                 save_dir = os.path.join(base_folder, directory)
-                media_type = 'tv' if base_folder in tv_folders else 'movie'
                 break
             else:
-                # Calculate similarity between normalized titles
                 normalized_dir_name = normalize_title(directory)
-                similarity = SequenceMatcher(None, normalized_movie_title, normalized_dir_name).ratio()
-                
-                # Keep track of the best match
+                similarity = SequenceMatcher(None, normalized_media_title, normalized_dir_name).ratio()
+
                 if similarity > best_similarity:
                     best_similarity = similarity
                     best_match_dir = os.path.join(base_folder, directory)
-                    media_type = 'tv' if base_folder in tv_folders else 'movie'
 
-        if save_dir:  # Exit loop if exact match is found
+        if save_dir:
             break
 
-    # If an exact match was found, proceed to save the poster
     if save_dir:
-        local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+        local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
         if local_poster_path:
-            # Send Slack notification for saved poster
-            message = f"Poster for '{movie_title}' has been downloaded!"
+            message = f"Poster for '{media_title}' has been downloaded!"
             send_slack_notification(message, local_poster_path, poster_url)
-        # Redirect to the appropriate page based on media type with anchor
-        redirect_url = '/tv' if media_type == 'tv' else '/'
-        return redirect(f"{redirect_url}#{generate_clean_id(movie_title)}")
+        return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
-    # Check best match similarity threshold
-    similarity_threshold = 0.8  # Threshold for an automatic match
+    # Similarity threshold
+    similarity_threshold = 0.8
     if best_similarity >= similarity_threshold:
         save_dir = best_match_dir
-        local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+        local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
         if local_poster_path:
-            message = f"Poster for '{movie_title}' has been downloaded!"
+            message = f"Poster for '{media_title}' has been downloaded!"
             send_slack_notification(message, local_poster_path, poster_url)
-        # Redirect to the appropriate page based on media type with anchor
-        redirect_url = '/tv' if media_type == 'tv' else '/'
-        return redirect(f"{redirect_url}#{generate_clean_id(movie_title)}")
+        return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
-    # If no suitable match, present manual selection options
-    similar_dirs = get_close_matches(movie_title, possible_dirs, n=5, cutoff=0.5)
-    return render_template('select_directory.html', similar_dirs=similar_dirs, movie_title=movie_title, poster_path=poster_url)
-
-#TEMP ROUTING FOR TESTING PURPOSES     
-@app.route('/test-tv-folders')
-def test_tv_folders():
-    tv_shows, total_count = get_poster_thumbnails(tv_folders)
-    return {"tv_shows": tv_shows, "total_count": total_count}
-
+    similar_dirs = get_close_matches(media_title, possible_dirs, n=5, cutoff=0.5)
+    return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, poster_path=poster_url, media_type=media_type)
 
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
