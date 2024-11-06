@@ -186,7 +186,7 @@ def select_movie(movie_id):
     } for poster in posters_sorted]
 
     # Render the poster_selection.html template with the sorted posters and clean_id
-    return render_template('poster_selection.html', posters=posters, movie_title=movie_title, clean_id=clean_id)
+    return render_template('poster_selection.html', posters=posters, movie_title=movie_title, media_type=media_type)
 
 # Route for selecting a TV show and displaying available posters
 @app.route('/select_tv/<int:tv_id>', methods=['GET'])
