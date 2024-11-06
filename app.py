@@ -275,14 +275,14 @@ def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
-        if 'poster_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
-            return "Bad Request: Missing form data", 400
+    if 'poster_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
+        return "Bad Request: Missing form data", 400
 
-        try:
-            # Get the selected poster URL and media title from the form submission
-            poster_url = request.form['poster_path']
-            media_title = request.form['media_title']
-            media_type = request.form['media_type']  # Expect 'movie' or 'tv' as input
+    try:
+        # Get the selected poster URL and media title from the form submission
+        poster_url = request.form['poster_path']
+        media_title = request.form['media_title']
+        media_type = request.form['media_type']  # Expect 'movie' or 'tv' as input
 
         # Log received form data
         print(f"Received form data: poster_path={poster_url}, media_title={media_title}, media_type={media_type}")
@@ -340,8 +340,7 @@ def select_poster():
         return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, poster_path=poster_url, media_type=media_type)
 
     except Exception as e:
-        # Log the error and return a 500 response if an exception occurs
-        app.logger.error("Error in select_poster route: %s", e)
+        app.logger.error('Error in select_poster route: %s', e)
         return "Internal Server Error", 500
 
 # Route for serving posters from the file system
