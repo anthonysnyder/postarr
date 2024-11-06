@@ -2,32 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Title for the page where users can select a directory -->
     <title>Select Directory</title>
 </head>
 <body>
-    <!-- Heading for the directory selection page -->
     <h1>Directory Not Found</h1>
-    <!-- Message to inform the user that the directory for the given movie title was not found -->
-    <p>The directory for <strong>{{ movie_title }}</strong> was not found. Please select a directory from the list below:</p>
-    
-    <!-- Form to allow users to select a directory -->
+    <p>The directory for <strong>{{ media_title }}</strong> was not found. Please select a directory from the list below:</p>
+
     <form action="{{ url_for('confirm_directory') }}" method="post">
-        <!-- Hidden input fields to send the poster's path and movie title to the backend -->
         <input type="hidden" name="poster_path" value="{{ poster_path }}">
-        <input type="hidden" name="movie_title" value="{{ movie_title }}">
-        
-        <!-- Loop through each of the similar directories found on the system -->
+        <input type="hidden" name="media_title" value="{{ media_title }}">
+        <input type="hidden" name="media_type" value="{{ media_type }}">
+
         {% for directory in similar_dirs %}
             <div>
-                <!-- Radio button for the user to select a directory -->
                 <input type="radio" name="selected_directory" value="{{ directory }}" id="{{ directory }}">
-                <!-- Label for each directory radio button -->
                 <label for="{{ directory }}">{{ directory }}</label>
             </div>
         {% endfor %}
         
-        <!-- Button to submit the form and save the poster to the selected directory -->
         <button type="submit">Save Poster</button>
     </form>
 </body>
