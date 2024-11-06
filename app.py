@@ -338,7 +338,7 @@ def select_poster():
 
     except KeyError as e:
         print(f"Error: Missing form field - {str(e)}")
-        return "Bad Request: Missing form data", 400)
+        return "Bad Request: Missing form data", 400
 
 # Route for serving posters from the file system
 @app.route('/poster/<path:filename>')
