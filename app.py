@@ -276,7 +276,7 @@ def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
         if 'poster_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
-        return "Bad Request: Missing form data", 400
+            return "Bad Request: Missing form data", 400
 
         try:
             # Get the selected poster URL and media title from the form submission
