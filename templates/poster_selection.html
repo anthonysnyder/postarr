@@ -3,46 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Page title dynamically set based on the selected movie -->
-    <title>Select a Poster for "{{ movie_title }}"</title>
-    <!-- Bootstrap for styling -->
+    <title>Select Poster</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* Specific style to ensure text in the card body is black */
-        .card-body p {
-            color: #000; /* Change text color to black */
+        body {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .poster-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .poster-card {
+            width: 200px;
+            text-align: center;
+        }
+        .poster-card img {
+            width: 100%;
+            border-radius: 8px;
         }
     </style>
 </head>
-<body class="bg-dark text-light"> <!-- Dark background for the body and light text color -->
-    <div class="container">
-        <!-- Page heading dynamically displays the movie title for which posters are being selected -->
-        <h1 class="text-center my-4">Select a Poster for "{{ movie_title }}"</h1>
-        <div class="row">
-            <!-- Loop through each poster and display it in a grid layout with Bootstrap's column system -->
-            {% for poster in posters %}
-            <div class="col-md-3"> <!-- Each poster takes up 3/12 columns, meaning 4 posters per row -->
-                <div class="card mb-4"> <!-- Card component to display poster and details -->
-                    <!-- Display the poster image -->
-                    <img src="{{ poster.url }}" class="card-img-top" alt="Poster">
-                    <!-- Card body contains the poster details and the form for selection -->
-                    <div class="card-body text-center" style="background-color: #f8f9fa;"> <!-- Light background for contrast -->
-                        <!-- Display the size and language of the poster -->
-                        <p class="card-text">{{ poster.size }} - {{ poster.language }}</p>
-                        <!-- Form to submit the selected poster -->
-                        <form action="{{ url_for('select_poster') }}" method="POST">
-                            <!-- Hidden input to store the selected poster's URL -->
-                            <input type="hidden" name="poster_path" value="{{ poster.url }}">
-                            <!-- Hidden input to store the movie title -->
-                            <input type="hidden" name="movie_title" value="{{ movie_title }}">
-                            <!-- Button to submit the form and select the poster -->
-                            <button type="submit" class="btn btn-primary">Select Poster</button>
-                        </form>
-                    </div>
-                </div>
+<body>
+
+<div class="container">
+    <h1 class="my-4 text-center">Select a Poster for "{{ movie_title }}"</h1>
+    <div class="poster-container">
+        {% for poster in posters %}
+            <div class="poster-card">
+                <img src="{{ poster.url }}" alt="Poster for {{ movie_title }}">
+                <form action="{{ url_for('select_poster') }}" method="POST">
+                    <!-- Hidden input to store the selected poster's URL -->
+                    <input type="hidden" name="poster_path" value="{{ poster.url }}">
+                    <!-- Hidden input to store the movie title -->
+                    <input type="hidden" name="media_title" value="{{ movie_title }}">
+                    <!-- Hidden input to specify if it's a movie or a TV show -->
+                    <input type="hidden" name="media_type" value="{{ media_type }}">
+                    <!-- Button to submit the form and select the poster -->
+                    <button type="submit" class="btn btn-primary btn-block mt-2">Select Poster</button>
+                </form>
             </div>
-            {% endfor %}
-        </div>
+        {% endfor %}
     </div>
+</div>
+
 </body>
 </html>
