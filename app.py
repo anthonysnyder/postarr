@@ -378,11 +378,21 @@ def serve_poster(filename):
 # Route for confirming the directory and saving the poster (used when manual selection is required)
 @app.route('/confirm_directory', methods=['POST'])
 def confirm_directory():
+    # Print the entire form data for debugging
+    print("Received form data:", request.form)
+
     # Get the selected directory and other details from the form submission
-    selected_directory = request.form['selected_directory']
-    movie_title = request.form['movie_title']
-    poster_url = request.form['poster_path']
+    selected_directory = request.form.get('selected_directory')
+    movie_title = request.form.get('movie_title')
+    poster_url = request.form.get('poster_path')
     content_type = request.form.get('content_type', 'movie')  # Default to 'movie' if content_type isn't provided
+
+    # Check for missing fields
+    if not selected_directory or not movie_title or not poster_url:
+        app.logger.error("Missing form data: selected_directory, movie_title, or poster_path")
+        return "Bad Request: Missing form data", 400
+    
+    # Continue with the rest of your code...
 
     # Log to check if content_type is correctly read
     print(f"Content Type: {content_type}")
