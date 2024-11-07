@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Poster</title>
+    <title>Select a Poster</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
             background-color: #343a40;
             color: #fff;
         }
-        .poster-container {
+        .poster-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
             justify-content: center;
-            margin-top: 20px;
+            gap: 15px;
         }
         .poster-card {
             width: 200px;
@@ -28,28 +27,22 @@
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h1 class="my-4 text-center">Select a Poster for "{{ movie_title }}"</h1>
-    <div class="poster-container">
+    <h1 class="my-4 text-center">Select a Poster for "{{ media_title }}"</h1>
+    <div class="poster-grid">
         {% for poster in posters %}
-            <div class="poster-card">
-                <img src="{{ poster.url }}" alt="Poster for {{ movie_title }}">
-                <p class="mt-2 text-center"><strong>Resolution:</strong> {{ poster.resolution }}</p> <!-- Display the resolution -->
-                <form action="{{ url_for('select_poster') }}" method="POST">
-                    <!-- Hidden input to store the selected poster's URL -->
-                    <input type="hidden" name="poster_path" value="{{ poster.url }}">
-                    <!-- Hidden input to store the movie title -->
-                    <input type="hidden" name="media_title" value="{{ movie_title }}">
-                    <!-- Hidden input to specify if it's a movie or a TV show -->
-                    <input type="hidden" name="media_type" value="{{ media_type }}">
-                    <!-- Button to submit the form and select the poster -->
-                    <button type="submit" class="btn btn-primary btn-block mt-2">Select Poster</button>
-                </form>
-            </div>
+        <div class="poster-card">
+            <img src="{{ poster.url }}" alt="Poster for {{ media_title }}">
+            <p><strong>Resolution:</strong> {{ poster.size }}</p>
+            <form action="/select_poster" method="POST">
+                <input type="hidden" name="poster_path" value="{{ poster.url }}">
+                <input type="hidden" name="media_title" value="{{ media_title }}">
+                <input type="hidden" name="content_type" value="{{ content_type }}">
+                <button type="submit" class="btn btn-primary mt-2">Select Poster</button>
+            </form>
+        </div>
         {% endfor %}
     </div>
 </div>
-
 </body>
 </html>
