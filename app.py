@@ -172,21 +172,21 @@ def select_movie(movie_id):
 
     # Function to calculate the resolution (area) of a poster
     def poster_resolution(poster):
-        dimensions = poster['width'], poster['height']
-        return dimensions[0] * dimensions[1]  # Width * Height
+        return poster['width'] * poster['height']  # Width * Height
 
     # Sort posters by resolution in descending order (highest resolution first)
     posters_sorted = sorted(posters, key=poster_resolution, reverse=True)
 
     # Format the poster URLs and details for display
-    posters = [{
+    formatted_posters = [{
         'url': f"{POSTER_BASE_URL}{poster['file_path']}",
         'size': f"{poster['width']}x{poster['height']}",
         'language': poster['iso_639_1']
     } for poster in posters_sorted]
 
-    # Render the poster_selection.html template with the sorted posters and clean_id
-    return render_template('poster_selection.html', posters=posters, movie_title=movie_title, media_type=media_type)
+    # Render the poster_selection.html template with the sorted posters, movie title, and type
+    return render_template('poster_selection.html', posters=formatted_posters, media_title=movie_title, clean_id=clean_id, content_type="movie")
+
 
 # Route for selecting a TV show and displaying available posters
 @app.route('/select_tv/<int:tv_id>', methods=['GET'])
@@ -214,9 +214,8 @@ def select_tv(tv_id):
         'language': poster['iso_639_1']
     } for poster in posters_sorted]
 
-    # Render the poster_selection.html template with the sorted posters and clean_id
-    return render_template('poster_selection.html', posters=formatted_posters, movie_title=tv_title, clean_id=clean_id, content_type="tv")
-
+    # Render the poster_selection.html template with the sorted posters, tv title, and type
+    return render_template('poster_selection.html', posters=formatted_posters, media_title=tv_title, clean_id=clean_id, content_type="tv")
 # Function to handle poster selection and download, including thumbnail creation
 def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
     full_poster_path = os.path.join(save_dir, 'poster.jpg')
