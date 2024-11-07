@@ -275,31 +275,29 @@ def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
 # Route for handling poster selection and downloading
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
+    # Validate that the form includes the necessary data
     if 'poster_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
         return "Bad Request: Missing form data", 400
 
     try:
-        # Get the selected poster URL and media title from the form submission
+        # Get form data
         poster_url = request.form['poster_path']
         media_title = request.form['media_title']
-        media_type = request.form['media_type']  # Expect 'movie' or 'tv' as input
-
-        # Log received form data
-        print(f"Received form data: poster_path={poster_url}, media_title={media_title}, media_type={media_type}")
-
-        # Choose the appropriate base folders based on media type
+        media_type = request.form['media_type']  # Should be either 'movie' or 'tv'
+        
+        # Choose folders based on media type
         base_folders = movie_folders if media_type == 'movie' else tv_folders
 
-        # Initialize variables for similarity search
+        # Initialize variables for directory search
         save_dir = None
         possible_dirs = []
         best_similarity = 0
         best_match_dir = None
 
-        # Normalize the title for comparison
+        # Normalize title for directory comparison
         normalized_media_title = normalize_title(media_title)
 
-        # Search for the correct directory based on the exact title
+        # Attempt to locate exact or closest directory
         for base_folder in base_folders:
             directories = os.listdir(base_folder)
             possible_dirs.extend(directories)
@@ -312,6 +310,7 @@ def select_poster():
                     normalized_dir_name = normalize_title(directory)
                     similarity = SequenceMatcher(None, normalized_media_title, normalized_dir_name).ratio()
 
+                    # Update if this is the best match
                     if similarity > best_similarity:
                         best_similarity = similarity
                         best_match_dir = os.path.join(base_folder, directory)
@@ -319,6 +318,7 @@ def select_poster():
             if save_dir:
                 break
 
+        # If an exact match is found, proceed with download
         if save_dir:
             local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
             if local_poster_path:
@@ -326,7 +326,7 @@ def select_poster():
                 send_slack_notification(message, local_poster_path, poster_url)
             return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
-        # Similarity threshold
+        # If no exact match, use the best similarity above a threshold
         similarity_threshold = 0.8
         if best_similarity >= similarity_threshold:
             save_dir = best_match_dir
@@ -336,6 +336,7 @@ def select_poster():
                 send_slack_notification(message, local_poster_path, poster_url)
             return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
+        # If no suitable directory, present options to the user
         similar_dirs = get_close_matches(media_title, possible_dirs, n=5, cutoff=0.5)
         return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, poster_path=poster_url, media_type=media_type)
 
