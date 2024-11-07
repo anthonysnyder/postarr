@@ -35,6 +35,7 @@
         {% for poster in posters %}
             <div class="poster-card">
                 <img src="{{ poster.url }}" alt="Poster for {{ movie_title }}">
+                <p class="mt-2 text-center"><strong>Resolution:</strong> {{ poster.resolution }}</p> <!-- Display the resolution -->
                 <form action="{{ url_for('select_poster') }}" method="POST">
                     <!-- Hidden input to store the selected poster's URL -->
                     <input type="hidden" name="poster_path" value="{{ poster.url }}">
