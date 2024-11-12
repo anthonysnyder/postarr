@@ -109,7 +109,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">{{ tv_show.title }}</h5>
+                    <h5 class="mt-2 text-center" data-title="{{ tv_show.title | tojson }}" onclick="triggerSearchFromData(this, 'tv')">{{ tv_show.title }}</h5>
             
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
@@ -157,6 +157,12 @@
                 item.style.display = 'block';  // Show items without posters
             }
         });
+    }
+
+    // Function to trigger search using data attributes
+    function triggerSearchFromData(element, contentType) {
+        const title = element.getAttribute('data-title'); // Get the JSON-safe title from data attribute
+        window.location.href = `/search_${contentType}?query=${encodeURIComponent(title)}`;
     }
 </script>
 </body>
