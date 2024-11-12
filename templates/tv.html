@@ -160,13 +160,13 @@
 
     // Function to trigger search using data attributes
     function triggerSearchFromData(element, contentType) {
-    const title = element.getAttribute('data-title'); // Get title from data-title attribute
-    console.log("Title from data attribute:", title); // Debugging
-    if (title) {
-        window.location.href = `/search_${contentType}?query=${encodeURIComponent(title)}`;
-    } else {
+    const title = element.getAttribute('data-title');
+    if (!title) {
         console.error("Title attribute missing in triggerSearchFromData call.");
+        return;
     }
+    window.location.href = `/search_${contentType}?query=${encodeURIComponent(title)}`;
+}
 }
 </script>
 </body>
