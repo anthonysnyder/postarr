@@ -109,8 +109,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" data-title="{{ movie.title | tojson }}" onclick="triggerSearchFromData(this, 'tv')">{{ movie.title }}</h5>
-            
+                    <h5 class="mt-2 text-center" data-title="{{ tv_show.title | tojson }}" onclick="triggerSearchFromData(this, 'tv')">{{ tv_show.title }}</h5>            
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
                         <strong>Dimensions:</strong> {{ tv_show.poster_dimensions }} | 
@@ -161,9 +160,14 @@
 
     // Function to trigger search using data attributes
     function triggerSearchFromData(element, contentType) {
-        const title = element.getAttribute('data-title'); // Get the JSON-safe title from data attribute
+    const title = element.getAttribute('data-title'); // Get title from data-title attribute
+    console.log("Title from data attribute:", title); // Debugging
+    if (title) {
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(title)}`;
+    } else {
+        console.error("Title attribute missing in triggerSearchFromData call.");
     }
+}
 </script>
 </body>
 </html>
