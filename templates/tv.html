@@ -123,7 +123,6 @@
 </div>
 
 <script>
-<script>
     // Function to trigger search
     function triggerSearch(title, contentType) {
         const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
@@ -159,16 +158,16 @@
         });
     }
 
-    // Function to trigger search using data attributes
+    /// Ensure the function is globally accessible
     function triggerSearchFromData(element, contentType) {
         const title = element.getAttribute('data-title');
         if (!title) {
             console.error("Title attribute missing in triggerSearchFromData call.");
             return;
         }
+        console.log(`Triggering search for: ${title}`);
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(title)}`;
     }
-</script>
 </script>
 </body>
 </html>
