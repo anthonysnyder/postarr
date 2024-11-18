@@ -112,8 +112,20 @@ def index():
 # Route for TV shows page
 @app.route('/tv')
 def tv_shows():
-    tv_shows, total_tv_shows = get_poster_thumbnails(tv_folders)
-    return render_template('tv.html', tv_shows=tv_shows, total_tv_shows=total_tv_shows)
+    tv_shows = []
+    for tv_show in tv_show_list:
+        clean_title = generate_clean_id(tv_show["title"])  # Normalize TV show title
+        tv_shows.append({
+            "title": tv_show["title"],
+            "clean_title": clean_title,  # Include normalized title
+            "poster": tv_show.get("poster"),
+            "poster_thumb": tv_show.get("poster_thumb"),
+            "has_poster": bool(tv_show.get("poster")),
+            "poster_dimensions": tv_show.get("poster_dimensions", "Unknown"),
+            "poster_last_modified": tv_show.get("poster_last_modified", "Unknown")
+        })
+
+    return render_template('tv.html', tv_shows=tv_shows, total_tv_shows=len(tv_shows))
 
 # Route to refresh index.html (if needed)
 @app.route('/refresh')

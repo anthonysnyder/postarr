@@ -109,7 +109,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" data-title="{{ tv_show.clean_title }}" onclick="triggerSearchFromData(this, 'tv')">{{ tv_show.title }}</h5>            
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">{{ tv_show.title }}</h5>            
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
                         <strong>Dimensions:</strong> {{ tv_show.poster_dimensions }} | 
