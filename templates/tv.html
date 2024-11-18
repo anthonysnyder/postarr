@@ -97,19 +97,19 @@
             <!-- TV Shows grid -->
             <div id="tvList" class="movie-grid">
                 {% for tv_show in tv_shows %}
-                <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster }}">
+                <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.clean_title }}" data-has-poster="{{ tv_show.has_poster }}">
                     <div>
                         {% if tv_show.poster_thumb %}
-                        <img src="{{ tv_show.poster_thumb }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
+                        <img src="{{ tv_show.poster_thumb }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">
                         {% elif tv_show.poster %}
-                        <img src="{{ tv_show.poster }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.title }}', 'tv')">
+                        <img src="{{ tv_show.poster }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" data-title="{{ tv_show.title | tojson }}" onclick="triggerSearchFromData(this, 'tv')">{{ tv_show.title }}</h5>            
+                    <h5 class="mt-2 text-center" data-title="{{ tv_show.clean_title }}" onclick="triggerSearchFromData(this, 'tv')">{{ tv_show.title }}</h5>            
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
                         <strong>Dimensions:</strong> {{ tv_show.poster_dimensions }} | 
