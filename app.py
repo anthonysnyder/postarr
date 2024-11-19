@@ -287,7 +287,9 @@ def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
 @app.route('/select_poster', methods=['POST'])
 def select_poster():
     # Validate that the form includes the necessary data
+    app.logger.info("Received form data: %s", request.form)
     if 'poster_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
+        app.logger.error("Missing form data: %s", request.form)
         return "Bad Request: Missing form data", 400
 
     try:
@@ -295,7 +297,7 @@ def select_poster():
         poster_url = request.form['poster_path']
         media_title = request.form['media_title']
         media_type = request.form['media_type']  # Should be either 'movie' or 'tv'
-        
+
         # Choose folders based on media type
         base_folders = movie_folders if media_type == 'movie' else tv_folders
 
@@ -314,17 +316,17 @@ def select_poster():
             possible_dirs.extend(directories)
 
             for directory in directories:
+                normalized_dir_name = normalize_title(directory)
+                similarity = SequenceMatcher(None, normalized_media_title, normalized_dir_name).ratio()
+
+                # Update if this is the best match
+                if similarity > best_similarity:
+                    best_similarity = similarity
+                    best_match_dir = os.path.join(base_folder, directory)
+
                 if directory == media_title:
                     save_dir = os.path.join(base_folder, directory)
                     break
-                else:
-                    normalized_dir_name = normalize_title(directory)
-                    similarity = SequenceMatcher(None, normalized_media_title, normalized_dir_name).ratio()
-
-                    # Update if this is the best match
-                    if similarity > best_similarity:
-                        best_similarity = similarity
-                        best_match_dir = os.path.join(base_folder, directory)
 
             if save_dir:
                 break
@@ -351,8 +353,11 @@ def select_poster():
         similar_dirs = get_close_matches(media_title, possible_dirs, n=5, cutoff=0.5)
         return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, poster_path=poster_url, media_type=media_type)
 
+    except FileNotFoundError as fnf_error:
+        app.logger.error("File not found: %s", fnf_error)
+        return "Directory not found", 404
     except Exception as e:
-        app.logger.error('Error in select_poster route: %s', e)
+        app.logger.exception("Unexpected error in select_poster route: %s", e)
         return "Internal Server Error", 500
 
 # Route for serving posters from the file system
