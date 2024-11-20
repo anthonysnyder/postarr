@@ -113,6 +113,10 @@ def index():
 @app.route('/tv')
 def tv_shows():
     tv_shows, total_tv_shows = get_poster_thumbnails(tv_folders)
+
+    # Log the TV shows data for debugging
+    app.logger.info(f"Fetched TV shows: {tv_shows}")
+
     return render_template('tv.html', tv_shows=tv_shows, total_tv_shows=total_tv_shows)
 
 # Route to refresh index.html (if needed)
@@ -141,16 +145,20 @@ def search_movie():
 # Route for searching TV shows using TMDb API
 @app.route('/search_tv', methods=['GET'])
 def search_tv():
-    # Decode query to handle any encoded characters
     query = unquote(request.args.get('query', ''))
 
-    # Make a request to the TMDb API
+    # Log the received query
+    app.logger.info(f"Search TV query received: {query}")
+
     response = requests.get(f"{BASE_URL}/search/tv", params={"api_key": TMDB_API_KEY, "query": query, "include_adult": False, "language": "en-US", "page": 1})
     results = response.json().get('results', [])
 
-    # Normalize TMDb titles
+    # Log the fetched results
+    app.logger.info(f"TMDb API returned {len(results)} results for query: {query}")
+
     for result in results:
         result['clean_id'] = generate_clean_id(result['name'])
+        app.logger.info(f"Result processed: {result['name']} -> Clean ID: {result['clean_id']}")
 
     return render_template('search_results.html', query=query, results=results, content_type="tv")
 

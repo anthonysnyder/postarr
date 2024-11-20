@@ -109,7 +109,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ tv_show.clean_title }}`, 'tv')">{{ tv_show.title }}</h5>            
+                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ tv_show.clean_id }}', 'tv')">{{ tv_show.title }}</h5>           
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
                         <strong>Dimensions:</strong> {{ tv_show.poster_dimensions }} | 
@@ -130,6 +130,9 @@
             .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
             .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
             .trim(); // Trim leading/trailing spaces
+
+        // Log the cleaned title for debugging
+        console.log(`Triggering search for: ${cleanTitle}, Content Type: ${contentType}`);
 
         // Redirect with sanitized title
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
