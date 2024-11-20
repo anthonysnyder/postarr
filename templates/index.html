@@ -126,15 +126,15 @@
 <script>
     // Function to trigger search
     function triggerSearch(title, contentType) {
-    // Clean title by removing year and special characters
-    const cleanTitle = title
-        .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
-        .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
-        .trim(); // Trim leading/trailing spaces
+        // Clean title by removing year and special characters
+        const cleanTitle = title
+            .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
+            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
+            .trim(); // Trim leading/trailing spaces
 
-    // Redirect with sanitized title
-    window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
-}
+        // Redirect with sanitized title
+        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+    }
 
     // Filter function to show only matching search query items
     document.getElementById('searchInput').addEventListener('keyup', function() {
@@ -147,23 +147,25 @@
         });
     });
 
-// Function to show only items without posters
-function showMediaWithoutPoster(mediaType) {
-    console.log(`Showing ${mediaType} without posters.`);
-    const mediaItems = document.querySelectorAll(`#${mediaType}List .movie-card`);
+    // Function to show only items without posters
+    function filterMoviesWithoutPoster() {
+        const movies = document.querySelectorAll('#movieList .movie-card');
 
-    mediaItems.forEach(function(item) {
-        const hasPoster = item.getAttribute('data-has-poster');
-        console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+        movies.forEach(function(movie) {
+            const hasPoster = movie.getAttribute('data-has-poster');
+            console.log(`Movie: ${movie.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
 
-        // Convert hasPoster to string explicitly to ensure proper comparison
-        if (String(hasPoster) === "true") {
-            item.style.display = 'none';  // Hide items with posters
-        } else {
-            item.style.display = 'block';  // Show items without posters
-        }
-    });
-}
+            // Convert hasPoster to string explicitly to ensure proper comparison
+            if (String(hasPoster) === "true") {
+                movie.style.display = 'none';  // Hide movies with posters
+            } else {
+                movie.style.display = 'block';  // Show movies without posters
+            }
+        });
+    }
+
+    // Update the button's click event to call filterMoviesWithoutPoster
+    document.querySelector('.btn-primary').addEventListener('click', filterMoviesWithoutPoster);
 </script>
 </body>
 </html>
