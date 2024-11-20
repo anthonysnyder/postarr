@@ -401,16 +401,17 @@ def serve_poster(filename):
 def confirm_directory():
     # Log the form data for debugging
     selected_directory = request.form.get('selected_directory')
-    movie_title = request.form.get('movie_title')
+    movie_title = request.form.get('media_title')
     poster_url = request.form.get('poster_path')
     content_type = request.form.get('content_type', 'movie')  # Default to 'movie' if content_type isn't provided
 
     # Log all received form data
     app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, poster_url={poster_url}, content_type={content_type}")
 
-    # Check for missing fields
-    if not selected_directory or not movie_title or not poster_url:
-        app.logger.error("Missing form data: selected_directory, movie_title, or poster_path")
+    # Validate form data
+    if not selected_directory or not movie_title or not poster_path:
+        app.logger.error("Missing form data: selected_directory=%s, media_title=%s, poster_path=%s",
+                         selected_directory, movie_title, poster_path)
         return "Bad Request: Missing form data", 400
 
     # Construct the save directory path based on the selected directory
