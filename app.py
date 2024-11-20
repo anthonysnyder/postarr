@@ -400,7 +400,11 @@ def serve_poster(filename):
 @app.route('/confirm_directory', methods=['POST'])
 def confirm_directory():
     # Log the form data for debugging
-    app.logger.info("Form data received: %s", request.form)
+    app.logger.info(f"Received data: selected_directory={selected_directory}, media_title={media_title}, poster_path={poster_path}")
+    
+    if not selected_directory or not media_title or not poster_path:
+            app.logger.error("Missing form data")
+            return "Bad Request: Missing form data", 400
 
     # Get the selected directory and other details from the form submission
     selected_directory = request.form.get('selected_directory')
