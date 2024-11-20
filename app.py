@@ -409,10 +409,10 @@ def confirm_directory():
     app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, poster_url={poster_url}, content_type={content_type}")
 
     # Validate form data
-    if not selected_directory or not movie_title or not poster_path:
-        app.logger.error("Missing form data: selected_directory=%s, media_title=%s, poster_path=%s",
-                         selected_directory, movie_title, poster_path)
-        return "Bad Request: Missing form data", 400
+    if not selected_directory or not movie_title or not poster_url:
+    app.logger.error("Missing form data: selected_directory=%s, media_title=%s, poster_url=%s",
+                     selected_directory, movie_title, poster_url)
+    return "Bad Request: Missing form data", 400
 
     # Construct the save directory path based on the selected directory
     save_dir = None
