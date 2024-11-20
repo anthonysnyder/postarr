@@ -126,9 +126,15 @@
 <script>
     // Function to trigger search
     function triggerSearch(title, contentType) {
-        const cleanTitle = title.replace(/\(\d{4}\)/, '').trim();
-        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
-    }
+    // Remove the year in parentheses and punctuation
+    const cleanTitle = title
+        .replace(/\(\d{4}\)/, '') // Remove the year
+        .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
+        .trim(); // Remove leading and trailing spaces
+
+    // Encode and redirect
+    window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+}
 
     // Filter function to show only matching search query items
     document.getElementById('searchInput').addEventListener('keyup', function() {
