@@ -55,6 +55,11 @@
                 alert('Please select a directory before proceeding.');
             }
         });
-    </script>
+        
+        document.querySelector('form').addEventListener('submit', function(event) {
+            console.log('Form submitted');
+            console.log('Form data:', new FormData(this));
+        });
+</script>
 </body>
 </html>
