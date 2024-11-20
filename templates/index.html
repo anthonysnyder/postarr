@@ -109,7 +109,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    <h5 class="mt-2 text-center" onclick="triggerSearch('{{ movie.title }}', 'movie')">{{ movie.title }}</h5>
+                    <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ movie.title }}`, 'movie')">{{ movie.title }}</h5>
             
                     <!-- Display Resolution and Date Modified -->
                     <p class="text-center">
@@ -126,13 +126,13 @@
 <script>
     // Function to trigger search
     function triggerSearch(title, contentType) {
-    // Remove the year in parentheses and punctuation
+    // Clean title by removing year and special characters
     const cleanTitle = title
-        .replace(/\(\d{4}\)/, '') // Remove the year
+        .replace(/$begin:math:text$\\d{4}$end:math:text$/, '') // Remove the year
         .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
-        .trim(); // Remove leading and trailing spaces
+        .trim(); // Trim leading/trailing spaces
 
-    // Encode and redirect
+    // Redirect with sanitized title
     window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
 }
 
