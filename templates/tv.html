@@ -125,11 +125,11 @@
 <script>
     // Function to trigger search
     function triggerSearch(title, contentType) {
-        // Clean title by removing year and special characters
-        const cleanTitle = title
-            .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
-            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
-            .trim(); // Trim leading/trailing spaces
+    // Clean title by removing year and special characters while preserving spaces
+    const cleanTitle = title
+        .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
+        .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters, preserve spaces
+        .trim(); // Trim leading/trailing spaces
 
         // Log the cleaned title for debugging
         console.log(`Triggering search for: ${cleanTitle}, Content Type: ${contentType}`);
