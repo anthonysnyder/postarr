@@ -197,7 +197,7 @@ def select_movie(movie_id):
     } for poster in posters_sorted]
 
     # Render the poster_selection.html template with the sorted posters, movie title, and type
-    return render_template('poster_selection.html', posters=formatted_posters, media_title=movie_title, clean_id=clean_id, content_type="movie")
+    return render_template('poster_selection.html', media_title=media_title, content_type='movie', posters=posters)
 
 
 # Route for selecting a TV show and displaying available posters
@@ -299,6 +299,9 @@ def select_poster():
         poster_url = request.form['poster_path']
         media_title = request.form['media_title']
         media_type = request.form['media_type']  # Should be either 'movie' or 'tv'
+
+        # Add the logger here
+        app.logger.info(f"Poster Path: {poster_url}, Media Title: {media_title}, Media Type: {media_type}")
 
         # Choose base folders based on media type
         base_folders = movie_folders if media_type == 'movie' else tv_folders

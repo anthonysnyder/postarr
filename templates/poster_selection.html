@@ -44,5 +44,18 @@
         {% endfor %}
     </div>
 </div>
+<script>
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            const posterPath = form.querySelector('input[name="poster_path"]').value;
+            const mediaTitle = form.querySelector('input[name="media_title"]').value;
+            const mediaType = form.querySelector('input[name="media_type"]').value;
+            if (!posterPath || !mediaTitle || !mediaType) {
+                event.preventDefault();
+                alert('Missing form data. Please try again.');
+            }
+        });
+    });
+</script>
 </body>
 </html>
