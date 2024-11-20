@@ -400,25 +400,18 @@ def serve_poster(filename):
 @app.route('/confirm_directory', methods=['POST'])
 def confirm_directory():
     # Log the form data for debugging
-    app.logger.info(f"Received data: selected_directory={selected_directory}, media_title={media_title}, poster_path={poster_path}")
-    
-    if not selected_directory or not media_title or not poster_path:
-            app.logger.error("Missing form data")
-            return "Bad Request: Missing form data", 400
-
-    # Get the selected directory and other details from the form submission
     selected_directory = request.form.get('selected_directory')
     movie_title = request.form.get('movie_title')
     poster_url = request.form.get('poster_path')
     content_type = request.form.get('content_type', 'movie')  # Default to 'movie' if content_type isn't provided
 
+    # Log all received form data
+    app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, poster_url={poster_url}, content_type={content_type}")
+
     # Check for missing fields
     if not selected_directory or not movie_title or not poster_url:
         app.logger.error("Missing form data: selected_directory, movie_title, or poster_path")
         return "Bad Request: Missing form data", 400
-
-    # Log to check if content_type is correctly read
-    print(f"Content Type: {content_type}")
 
     # Construct the save directory path based on the selected directory
     save_dir = None
@@ -431,7 +424,7 @@ def confirm_directory():
 
     if not save_dir:
         # Directory not found, log an error and return 404
-        print(f"Selected directory '{selected_directory}' not found in base folders.")
+        app.logger.error(f"Selected directory '{selected_directory}' not found in base folders.")
         return "Directory not found", 404
 
     # Save the poster and get the local path
@@ -440,22 +433,22 @@ def confirm_directory():
         # Send Slack notification with the local path
         message = f"Poster for '{movie_title}' has been downloaded!"
         send_slack_notification(message, local_poster_path, poster_url)
+        app.logger.info(f"Poster successfully saved to {local_poster_path}")
     else:
-        print(f"Failed to save poster for '{movie_title}'")
+        app.logger.error(f"Failed to save poster for '{movie_title}'")
+        return "Failed to save poster", 500
 
     # Generate clean_id for navigation
     anchor = generate_clean_id(movie_title)
     
     # Determine redirect URL based on content type
-    if content_type == 'movie':
-        redirect_url = url_for('index')
-    else:
-        redirect_url = url_for('tv_shows')
+    redirect_url = url_for('index') if content_type == 'movie' else url_for('tv_shows')
 
-    # Log to verify the constructed redirect URL
-    print(f"Redirect URL: {redirect_url}#{anchor}", flush=True)
+    # Log the redirect URL for verification
+    app.logger.info(f"Redirect URL: {redirect_url}#{anchor}")
 
     return redirect(f"{redirect_url}#{anchor}")
+
 # Function to send Slack notifications (if a webhook URL is configured)
 def send_slack_notification(message, local_poster_path, poster_url):
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
