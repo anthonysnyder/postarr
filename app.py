@@ -112,10 +112,7 @@ def index():
 # Route for TV shows page
 @app.route('/tv')
 def tv_shows():
-    # Fetch TV shows and their associated poster details
     tv_shows, total_tv_shows = get_poster_thumbnails(tv_folders)
-
-    # Render the TV HTML page with the fetched data
     return render_template('tv.html', tv_shows=tv_shows, total_tv_shows=total_tv_shows)
 
 # Route to refresh index.html (if needed)

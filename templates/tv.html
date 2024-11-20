@@ -90,19 +90,19 @@
             <!-- Filter and refresh controls -->
             <input type="text" id="searchInput" placeholder="Filter TV Shows..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
-                <button class="btn btn-primary" onclick="showMediaWithoutPoster('tv')">Show TV Shows Without Poster</button>
+                <button class="btn btn-primary" onclick="filterTVShowsWithoutPoster()">Show TV Shows Without Poster</button>
                 <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
 
             <!-- TV Shows grid -->
             <div id="tvList" class="movie-grid">
                 {% for tv_show in tv_shows %}
-                <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.clean_title }}" data-has-poster="{{ tv_show.has_poster | lower }}">
+                <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster | lower }}">
                     <div>
                         {% if tv_show.poster_thumb %}
-                        <img src="{{ tv_show.poster_thumb }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch(`{{ tv_show.clean_title }}`, 'tv')">
+                        <img src="{{ tv_show.poster_thumb }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">
                         {% elif tv_show.poster %}
-                        <img src="{{ tv_show.poster }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch(`{{ tv_show.clean_title }}`, 'tv')">
+                        <img src="{{ tv_show.poster }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
@@ -125,13 +125,19 @@
 <script>
     // Function to trigger search
     function triggerSearch(title, contentType) {
-        const cleanTitle = title.replace(/\(\d{4}\)/g, '').replace(/[^a-z0-9\s]/gi, '').trim();
+        // Clean title by removing year and special characters
+        const cleanTitle = title
+            .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
+            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
+            .trim(); // Trim leading/trailing spaces
+
+        // Redirect with sanitized title
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
     }
 
     // Filter function to show only matching search query items
     document.getElementById('searchInput').addEventListener('keyup', function() {
-        const query = this.value.toLowerCase();
+        const query = document.getElementById('searchInput').value.toLowerCase();
         const tvShows = document.querySelectorAll('#tvList .movie-card');
 
         tvShows.forEach(function(tvShow) {
@@ -141,22 +147,23 @@
     });
 
     // Function to show only items without posters
-    function showMediaWithoutPoster(mediaType) {
-        console.log(`Showing ${mediaType} without posters.`);
-        const mediaItems = document.querySelectorAll(`#${mediaType}List .movie-card`);
+    function filterTVShowsWithoutPoster() {
+        const tvShows = document.querySelectorAll('#tvList .movie-card');
 
-        mediaItems.forEach(function(item) {
-            const hasPoster = item.getAttribute('data-has-poster');
-            console.log(`Media: ${item.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+        tvShows.forEach(function(tvShow) {
+            const hasPoster = tvShow.getAttribute('data-has-poster').toLowerCase(); // Normalize to lowercase
+            console.log(`TV Show: ${tvShow.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
 
-            // Convert hasPoster to string explicitly to ensure proper comparison
-            if (String(hasPoster).toLowerCase() === "true") {
-                item.style.display = 'none';  // Hide items with posters
+            if (hasPoster === "true") {
+                tvShow.style.display = 'none';  // Hide TV shows with posters
             } else {
-                item.style.display = 'block';  // Show items without posters
+                tvShow.style.display = 'block';  // Show TV shows without posters
             }
         });
     }
+
+    // Update the button's click event to call filterTVShowsWithoutPoster
+    document.querySelector('.btn-primary').addEventListener('click', filterTVShowsWithoutPoster);
 </script>
 </body>
 </html>
