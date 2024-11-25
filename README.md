@@ -33,23 +33,29 @@ cd Postarr
 ## 2. Setup Docker Compose:
 Create a docker-compose.yml file in the root directory of the project:
 ```
-version: '3.8'
+version: "3.9"
 
 services:
-  Postarr:
-    image: swguru2004/Postarr:latest
-    container_name: Postarr
-    environment:
-      - TMDB_API_KEY=your_tmdb_api_key
-      - SLACK_WEBHOOK_URL=your_slack_webhook_url  # Optional
+  postarr:
+    image: python:3.12-slim  # Use the Python image suitable for your app
+    container_name: postarr
+    working_dir: /app
     volumes:
-      - /path/to/your/movies:/movies
-      - /path/to/your/kids-movies:/kids-movies
-      - /path/to/your/movies2:/movies2
-      - /path/to/your/kids-movies2:/kids-movies2
+      - ./app:/app  # Mount the app directory
+      - /volume1/data/media/movies:/movies  # Adjust paths for your environment
+      - /volume1/data/media/tv:/tv  # TV directory
     ports:
-      - 5000:5000
-    restart: unless-stopped
+      - "5000:5000"  # Expose Flask app on port 5000
+    environment:
+      - TMDB_API_KEY=<your_tmdb_api_key>  # Replace with your actual API key
+      - SLACK_WEBHOOK_URL=<your_slack_webhook_url>  # Optional Slack integration
+    command: >
+      sh -c "
+      pip install --no-cache-dir -r requirements.txt &&
+      python app.py
+      "
+    networks:
+      - postarr_network
 ```
 ## 3.	Start the Application:
 ```
