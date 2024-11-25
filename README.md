@@ -32,6 +32,8 @@ cd Postarr
 ```
 ## 2. Setup Docker Compose:
 Create a docker-compose.yml file in the root directory of the project:
+Note: Make sure to replace placeholders with your actual data/paths to files.
+
 ```
 services:
   postarr:
