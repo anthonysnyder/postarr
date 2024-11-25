@@ -1,18 +1,18 @@
 # Postarr
-🎬 Postarr: (Partially)Automate your movie poster collection! Postarr is a Flask app that scrapes movie directories and downloads high-quality posters from TheMovieDB. Designed for seamless integration with Docker on Synology NAS. Optional Slack integration for instant notifications!
+🎥 **Postarr**: (Partially) Automate your movie and TV show poster collection! Postarr is a Flask app that scrapes directories and downloads high-quality posters for your **movies** and **TV shows** from TheMovieDB (TMDb). Designed for seamless integration with Docker or Synology NAS. Optional Slack integration for instant notifications!
 
-Welcome to Postarr, a Flask-based application designed to automatically scrape your movie directories and download high-quality posters from TheMovieDB (TMDb). Whether you’re managing a vast movie collection on your Synology NAS or simply want to keep your movie library visually appealing, Postarr is here to help. Additionally, you can opt-in for Slack notifications to get instant updates when new posters are added!
+Welcome to **Postarr**, a Flask-based application designed to keep your movie and TV show libraries visually appealing by automatically downloading high-quality posters. Whether managing a vast collection on your Synology NAS or organizing a smaller local library, Postarr is here to help. With support for movies and now TV shows, you can streamline poster management across all your media. Additionally, you can opt-in for Slack notifications to get instant updates when new posters are added!
 
 ## Features
 
-	• 	Automated Poster Downloading: Automatically fetch posters from TMDb based on your movie directory.
-	•	Multi-Directory Support: Seamlessly manage multiple movie directories.
+	•	Automated Poster Downloading: Automatically fetch posters for movies and TV shows from TMDb based on your directory structure.
+	•	Multi-Directory Support: Seamlessly manage multiple directories for both movies and TV shows.
 	•	Slack Integration (Optional): Get notified instantly in your Slack channel when a poster is downloaded.
-	•	Docker Compatible: Built with Docker in mind, especially for Synology NAS.
-  	•	Movie Collection Dashboard: View all movies in your collection, displayed with their corresponding posters.
-	• 	Search Functionality: Search for movies directly from TMDb based on user input.
- 	• 	Poster Update Select from multiple available posters and update missing or low-resolution posters for your movies.
-	•	Smooth Scrolling with Anchors**: Automatically scroll to the selected movie in the movie list after a poster update.
+	•	Docker Compatible: Built with Docker in mind, especially for Synology NAS setups.
+	•	Media Collection Dashboard: View all movies and TV shows in your collection with their corresponding posters.
+	•	Search Functionality: Search for movies and TV shows directly from TMDb based on user input.
+	•	Poster Update: Select and update missing or low-resolution posters for your movies or TV shows.
+	•	Smooth Scrolling with Anchors: Automatically scroll to the selected media in the list after a poster is updated.
 
 ## Prerequisites
 
