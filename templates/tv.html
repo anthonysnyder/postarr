@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My TV Show Collection</title>
+    <!-- External CSS for styling -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* Styling for overall page layout and components */
         body {
             background-color: #343a40; /* Dark background */
             color: #fff; /* Light text */
@@ -73,7 +75,7 @@
 </head>
 <body>
 <div id="wrapper">
-    <!-- Sidebar -->
+    <!-- Sidebar navigation menu -->
     <div class="bg-dark border-right" id="sidebar-wrapper">
         <div class="sidebar-heading">My Media Collection</div>
         <div class="list-group list-group-flush">
@@ -82,7 +84,7 @@
         </div>
     </div>
 
-    <!-- Page Content -->
+    <!-- Main Content Area -->
     <div id="page-content-wrapper">
         <div class="container-fluid">
             <h1 class="my-4">TV Show Collection</h1>
@@ -90,15 +92,18 @@
             <!-- Filter and refresh controls -->
             <input type="text" id="searchInput" placeholder="Filter TV Shows..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
+                <!-- Button to show TV shows without posters -->
                 <button class="btn btn-primary" onclick="filterTVShowsWithoutPoster()">Show TV Shows Without Poster</button>
+                <!-- Refresh button to reload data -->
                 <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
 
-            <!-- TV Shows grid -->
+            <!-- Grid to display TV shows -->
             <div id="tvList" class="movie-grid">
                 {% for tv_show in tv_shows %}
                 <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster | lower }}">
                     <div>
+                        <!-- Display the TV show's thumbnail or placeholder if none exists -->
                         {% if tv_show.poster_thumb %}
                         <img src="{{ tv_show.poster_thumb }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">
                         {% elif tv_show.poster %}
@@ -109,8 +114,9 @@
                         </div>
                         {% endif %}
                     </div>
+                    <!-- Display the TV show's title and make it clickable -->
                     <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ tv_show.title }}`, 'tv')">{{ tv_show.title }}</h5>          
-                    <!-- Display Resolution and Date Modified -->
+                    <!-- Display additional details like resolution and modification date -->
                     <p class="text-center">
                         <strong>Dimensions:</strong> {{ tv_show.poster_dimensions }} | 
                         <strong>Last Modified:</strong> {{ tv_show.poster_last_modified }}
@@ -135,7 +141,7 @@
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
     }
 
-    // Filter function to show only matching search query items
+    // Function to filter TV shows based on the search input
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const tvShows = document.querySelectorAll('#tvList .movie-card');
@@ -146,7 +152,7 @@
         });
     });
 
-    // Function to show only items without posters
+    // Function to filter TV shows without posters
     function filterTVShowsWithoutPoster() {
         const tvShows = document.querySelectorAll('#tvList .movie-card');
 
