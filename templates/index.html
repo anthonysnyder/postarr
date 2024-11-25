@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Metadata and Bootstrap CSS for styling -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Movie Collection</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* General styling for the page */
         body {
             background-color: #343a40; /* Dark background */
             color: #fff; /* Light text */
@@ -73,45 +75,51 @@
 </head>
 <body>
 <div id="wrapper">
-    <!-- Sidebar -->
+    <!-- Sidebar for navigation -->
     <div class="bg-dark border-right" id="sidebar-wrapper">
         <div class="sidebar-heading">My Media Collection</div>
         <div class="list-group list-group-flush">
+            <!-- Navigation buttons for movies and TV shows -->
             <button class="list-group-item list-group-item-action" onclick="window.location.assign('/')">Movies</button>
             <button class="list-group-item list-group-item-action" onclick="location.href='/tv'">TV Shows</button>
         </div>
     </div>
 
-    <!-- Page Content -->
+    <!-- Main content area -->
     <div id="page-content-wrapper">
         <div class="container-fluid">
             <h1 class="my-4">Movie Collection</h1>
 
-            <!-- Filter and refresh controls -->
+            <!-- Input field for filtering movies -->
             <input type="text" id="searchInput" placeholder="Filter Movies..." class="form-control">
+
+            <!-- Buttons for filtering and refreshing -->
             <div class="btn-group mt-2 mb-4" role="group">
                 <button class="btn btn-primary" onclick="filterMoviesWithoutPoster()">Show Movies Without Poster</button>
                 <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
 
-            <!-- Movie grid -->
+            <!-- Grid for displaying movies -->
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
                 <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}" data-has-poster="{{ movie.has_poster }}">
                     <div>
+                        <!-- Display movie poster if available -->
                         {% if movie.poster_thumb %}
                         <img src="{{ movie.poster_thumb }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}', 'movie')">
                         {% elif movie.poster %}
                         <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}', 'movie')">
                         {% else %}
+                        <!-- Placeholder for movies without posters -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                             <span>No Poster</span>
                         </div>
                         {% endif %}
                     </div>
+                    <!-- Movie title with clickable functionality -->
                     <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ movie.title }}`, 'movie')">{{ movie.title }}</h5>
             
-                    <!-- Display Resolution and Date Modified -->
+                    <!-- Display poster dimensions and last modified date -->
                     <p class="text-center">
                         <strong>Dimensions:</strong> {{ movie.poster_dimensions }} | 
                         <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
@@ -124,19 +132,19 @@
 </div>
 
 <script>
-    // Function to trigger search
+    // Function to trigger search for a movie
     function triggerSearch(title, contentType) {
-        // Clean title by removing year and special characters
+        // Clean the title by removing unwanted characters
         const cleanTitle = title
             .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
             .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
             .trim(); // Trim leading/trailing spaces
 
-        // Redirect with sanitized title
+        // Redirect with the cleaned title
         window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
     }
 
-    // Filter function to show only matching search query items
+    // Filter movies based on search input
     document.getElementById('searchInput').addEventListener('keyup', function() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const movies = document.querySelectorAll('#movieList .movie-card');
@@ -147,21 +155,21 @@
         });
     });
 
-    // Function to show only items without posters
+    // Function to show movies without posters
     function filterMoviesWithoutPoster() {
-    const movies = document.querySelectorAll('#movieList .movie-card');
+        const movies = document.querySelectorAll('#movieList .movie-card');
 
-    movies.forEach(function(movie) {
-        const hasPoster = movie.getAttribute('data-has-poster').toLowerCase(); // Normalize to lowercase
-        console.log(`Movie: ${movie.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+        movies.forEach(function(movie) {
+            const hasPoster = movie.getAttribute('data-has-poster').toLowerCase(); // Normalize to lowercase
+            console.log(`Movie: ${movie.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
 
-        if (hasPoster === "true") {
-            movie.style.display = 'none';  // Hide movies with posters
-        } else {
-            movie.style.display = 'block';  // Show movies without posters
-        }
-    });
-}
+            if (hasPoster === "true") {
+                movie.style.display = 'none';  // Hide movies with posters
+            } else {
+                movie.style.display = 'block';  // Show movies without posters
+            }
+        });
+    }
 
     // Update the button's click event to call filterMoviesWithoutPoster
     document.querySelector('.btn-primary').addEventListener('click', filterMoviesWithoutPoster);
