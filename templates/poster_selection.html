@@ -6,38 +6,46 @@
     <title>Select a Poster</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* Styling for the page */
         body {
-            background-color: #343a40;
-            color: #fff;
+            background-color: #343a40; /* Dark background color for better contrast */
+            color: #fff; /* Light text color for readability */
         }
         .poster-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
+            display: flex; /* Enables grid layout for posters */
+            flex-wrap: wrap; /* Allows wrapping of posters to the next row */
+            justify-content: center; /* Centers the posters in the container */
+            gap: 15px; /* Space between poster cards */
         }
         .poster-card {
-            width: 200px;
-            text-align: center;
+            width: 200px; /* Fixed width for each poster card */
+            text-align: center; /* Centers text within the card */
         }
         .poster-card img {
-            width: 100%;
-            border-radius: 8px;
+            width: 100%; /* Makes poster images responsive */
+            border-radius: 8px; /* Rounded corners for images */
         }
     </style>
 </head>
 <body>
 <div class="container">
+    <!-- Page heading with the selected media title -->
     <h1 class="my-4 text-center">Select a Poster for "{{ media_title }}"</h1>
     <div class="poster-grid">
         {% for poster in posters %}
+        <!-- Display each poster in a grid -->
         <div class="poster-card">
+            <!-- Image of the poster -->
             <img src="{{ poster.url }}" alt="Poster for {{ media_title }}">
+            <!-- Display resolution of the poster -->
             <p><strong>Resolution:</strong> {{ poster.size }}</p>
+            <!-- Form for selecting the current poster -->
             <form action="/select_poster" method="POST">
+                <!-- Hidden inputs to store necessary data for poster selection -->
                 <input type="hidden" name="poster_path" value="{{ poster.url }}">
                 <input type="hidden" name="media_title" value="{{ media_title }}">
                 <input type="hidden" name="media_type" value="{{ content_type }}">
+                <!-- Button to submit the selection -->
                 <button type="submit" class="btn btn-primary mt-2">Select Poster</button>
             </form>
         </div>
@@ -45,14 +53,17 @@
     </div>
 </div>
 <script>
+    // Ensure forms have the required data before submission
     document.querySelectorAll('form').forEach(form => {
         form.addEventListener('submit', function(event) {
+            // Fetch input values from the form
             const posterPath = form.querySelector('input[name="poster_path"]').value;
             const mediaTitle = form.querySelector('input[name="media_title"]').value;
             const mediaType = form.querySelector('input[name="media_type"]').value;
+            // Validate that all fields are filled
             if (!posterPath || !mediaTitle || !mediaType) {
-                event.preventDefault();
-                alert('Missing form data. Please try again.');
+                event.preventDefault(); // Prevent form submission
+                alert('Missing form data. Please try again.'); // Show an error message
             }
         });
     });
