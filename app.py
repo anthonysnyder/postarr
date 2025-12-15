@@ -45,14 +45,14 @@ def generate_clean_id(title):
     clean_id = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
     return clean_id
 
-# Function to retrieve media directories and their associated poster thumbnails
-def get_poster_thumbnails(base_folders=None):
+# Function to retrieve media directories and their associated logo thumbnails
+def get_logo_thumbnails(base_folders=None):
     # Default to movie folders if no folders specified
     if base_folders is None:
         base_folders = movie_folders
     media_list = []
 
-    # Iterate through specified base folders to find media with posters
+    # Iterate through specified base folders to find media with logos
     for base_folder in base_folders:
         for media_dir in sorted(os.listdir(base_folder)):
             if media_dir.lower() in ["@eadir", "#recycle"]:  # Skip Synology NAS system folders (case-insensitive)
@@ -61,63 +61,63 @@ def get_poster_thumbnails(base_folders=None):
             media_path = os.path.join(base_folder, media_dir)
 
             if os.path.isdir(media_path):
-                poster = None
-                poster_thumb = None
-                poster_dimensions = None
-                poster_last_modified = None
+                logo = None
+                logo_thumb = None
+                logo_dimensions = None
+                logo_last_modified = None
 
-                # Search for poster files in various image formats
-                for ext in ['jpg', 'jpeg', 'png']:
-                    thumb_path = os.path.join(media_path, f"poster-thumb.{ext}")
-                    poster_path = os.path.join(media_path, f"poster.{ext}")
+                # Search for logo files in PNG format (logos typically have transparency)
+                for ext in ['png', 'jpg', 'jpeg']:
+                    thumb_path = os.path.join(media_path, f"logo-thumb.{ext}")
+                    logo_path = os.path.join(media_path, f"logo.{ext}")
 
-                    # Store thumbnail and full poster paths for web serving
+                    # Store thumbnail and full logo paths for web serving
                     if os.path.exists(thumb_path):
-                        poster_thumb = f"/poster/{urllib.parse.quote(media_dir)}/poster-thumb.{ext}"
+                        logo_thumb = f"/logo/{urllib.parse.quote(media_dir)}/logo-thumb.{ext}"
 
-                    if os.path.exists(poster_path):
-                        poster = f"/poster/{urllib.parse.quote(media_dir)}/poster.{ext}"
+                    if os.path.exists(logo_path):
+                        logo = f"/logo/{urllib.parse.quote(media_dir)}/logo.{ext}"
 
-                        # Get poster image dimensions
+                        # Get logo image dimensions
                         try:
-                            with Image.open(poster_path) as img:
-                                poster_dimensions = f"{img.width}x{img.height}"
+                            with Image.open(logo_path) as img:
+                                logo_dimensions = f"{img.width}x{img.height}"
                         except Exception:
-                            poster_dimensions = "Unknown"
+                            logo_dimensions = "Unknown"
 
-                        # Get last modified timestamp of the poster
-                        timestamp = os.path.getmtime(poster_path)
-                        poster_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+                        # Get last modified timestamp of the logo
+                        timestamp = os.path.getmtime(logo_path)
+                        logo_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
                         break
 
                 # Generate a clean ID for HTML anchor and URL purposes
                 clean_id = generate_clean_id(media_dir)
                 media_list.append({
                     'title': media_dir,
-                    'poster': poster,
-                    'poster_thumb': poster_thumb,
-                    'poster_dimensions': poster_dimensions,
-                    'poster_last_modified': poster_last_modified,
+                    'logo': logo,
+                    'logo_thumb': logo_thumb,
+                    'logo_dimensions': logo_dimensions,
+                    'logo_last_modified': logo_last_modified,
                     'clean_id': clean_id,
-                    'has_poster': bool(poster_thumb)
+                    'has_logo': bool(logo_thumb)
                 })
 
     # Sort media list, ignoring leading "The" for more natural sorting
     media_list = sorted(media_list, key=lambda x: strip_leading_the(x['title'].lower()))
     return media_list, len(media_list)
 
-# Route for the main index page showing movie posters
+# Route for the main index page showing movie logos
 @app.route('/')
 def index():
-    movies, total_movies = get_poster_thumbnails(movie_folders)
-    
+    movies, total_movies = get_logo_thumbnails(movie_folders)
+
     # Render the index page with movie thumbnails and total count
     return render_template('index.html', movies=movies, total_movies=total_movies)
 
 # Route for TV shows page
 @app.route('/tv')
 def tv_shows():
-    tv_shows, total_tv_shows = get_poster_thumbnails(tv_folders)
+    tv_shows, total_tv_shows = get_logo_thumbnails(tv_folders)
 
     # Log TV shows data for debugging
     app.logger.info(f"Fetched TV shows: {tv_shows}")
@@ -127,7 +127,7 @@ def tv_shows():
 # Route to trigger a manual refresh of media directories
 @app.route('/refresh')
 def refresh():
-    get_poster_thumbnails()  # Re-scan the directories
+    get_logo_thumbnails()  # Re-scan the directories
     return redirect(url_for('index'))
 
 # Route for searching movies using TMDb API
@@ -176,7 +176,7 @@ def search_tv():
     # Render search results template with TV show results
     return render_template('search_results.html', query=query, results=results, content_type="tv")
 
-# Route for selecting a movie and displaying available posters
+# Route for selecting a movie and displaying available logos
 @app.route('/select_movie/<int:movie_id>', methods=['GET'])
 def select_movie(movie_id):
     # Fetch detailed information about the selected movie from TMDb API
@@ -186,30 +186,30 @@ def select_movie(movie_id):
     movie_title = movie_details.get('title', '')
     clean_id = generate_clean_id(movie_title)
 
-    # Request available posters for the selected movie from TMDb API
-    posters = requests.get(f"{BASE_URL}/movie/{movie_id}/images", params={"api_key": TMDB_API_KEY}).json().get('posters', [])
+    # Request available logos for the selected movie from TMDb API
+    logos = requests.get(f"{BASE_URL}/movie/{movie_id}/images", params={"api_key": TMDB_API_KEY}).json().get('logos', [])
 
-    # Filter posters to include only English language posters
-    posters = [poster for poster in posters if poster['iso_639_1'] == 'en']
+    # Filter logos to include only English language logos
+    logos = [logo for logo in logos if logo['iso_639_1'] == 'en']
 
-    # Function to calculate poster resolution for sorting
-    def poster_resolution(poster):
-        return poster['width'] * poster['height']  # Calculate area of the poster
+    # Function to calculate logo resolution for sorting
+    def logo_resolution(logo):
+        return logo['width'] * logo['height']  # Calculate area of the logo
 
-    # Sort posters by resolution in descending order (highest resolution first)
-    posters_sorted = sorted(posters, key=poster_resolution, reverse=True)
+    # Sort logos by resolution in descending order (highest resolution first)
+    logos_sorted = sorted(logos, key=logo_resolution, reverse=True)
 
-    # Format poster details for display, including full URL, dimensions, and language
-    formatted_posters = [{
-        'url': f"{POSTER_BASE_URL}{poster['file_path']}",
-        'size': f"{poster['width']}x{poster['height']}",
-        'language': poster['iso_639_1']
-    } for poster in posters_sorted]
+    # Format logo details for display, including full URL, dimensions, and language
+    formatted_logos = [{
+        'url': f"{POSTER_BASE_URL}{logo['file_path']}",
+        'size': f"{logo['width']}x{logo['height']}",
+        'language': logo['iso_639_1']
+    } for logo in logos_sorted]
 
-    # Render poster selection template with sorted posters and movie details
-    return render_template('poster_selection.html', media_title=movie_title, content_type='movie', posters=formatted_posters)
+    # Render logo selection template with sorted logos and movie details
+    return render_template('logo_selection.html', media_title=movie_title, content_type='movie', logos=formatted_logos)
 
-# Route for selecting a TV show and displaying available posters
+# Route for selecting a TV show and displaying available logos
 @app.route('/select_tv/<int:tv_id>', methods=['GET'])
 def select_tv(tv_id):
     # Fetch detailed information about the selected TV show from TMDb API
@@ -219,101 +219,98 @@ def select_tv(tv_id):
     tv_title = tv_details.get('name', '')
     clean_id = generate_clean_id(tv_title)
 
-    # Request available posters for the selected TV show from TMDb API
-    posters = requests.get(f"{BASE_URL}/tv/{tv_id}/images", params={"api_key": TMDB_API_KEY}).json().get('posters', [])
+    # Request available logos for the selected TV show from TMDb API
+    logos = requests.get(f"{BASE_URL}/tv/{tv_id}/images", params={"api_key": TMDB_API_KEY}).json().get('logos', [])
 
-    # Filter posters to include only English language posters
-    posters = [poster for poster in posters if poster['iso_639_1'] == 'en']
+    # Filter logos to include only English language logos
+    logos = [logo for logo in logos if logo['iso_639_1'] == 'en']
 
-    # Sort posters by resolution in descending order (highest resolution first)
-    posters_sorted = sorted(posters, key=lambda p: p['width'] * p['height'], reverse=True)
+    # Sort logos by resolution in descending order (highest resolution first)
+    logos_sorted = sorted(logos, key=lambda p: p['width'] * p['height'], reverse=True)
 
-    # Format poster details for display, including full URL, dimensions, and language
-    formatted_posters = [{
-        'url': f"{POSTER_BASE_URL}{poster['file_path']}",
-        'size': f"{poster['width']}x{poster['height']}",
-        'language': poster['iso_639_1']
-    } for poster in posters_sorted]
+    # Format logo details for display, including full URL, dimensions, and language
+    formatted_logos = [{
+        'url': f"{POSTER_BASE_URL}{logo['file_path']}",
+        'size': f"{logo['width']}x{logo['height']}",
+        'language': logo['iso_639_1']
+    } for logo in logos_sorted]
 
-    # Render poster selection template with sorted posters, TV show details, and content type
-    return render_template('poster_selection.html', posters=formatted_posters, media_title=tv_title, clean_id=clean_id, content_type="tv")
+    # Render logo selection template with sorted logos, TV show details, and content type
+    return render_template('logo_selection.html', logos=formatted_logos, media_title=tv_title, clean_id=clean_id, content_type="tv")
 
-# Function to handle poster download and thumbnail creation
-def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
-    # Define full paths for the poster and thumbnail
-    full_poster_path = os.path.join(save_dir, 'poster.jpg')
-    thumb_poster_path = os.path.join(save_dir, 'poster-thumb.jpg')
+# Function to handle logo download and thumbnail creation
+def save_logo_and_thumbnail(logo_url, movie_title, save_dir):
+    # Define full paths for the logo and thumbnail (PNG to preserve transparency)
+    full_logo_path = os.path.join(save_dir, 'logo.png')
+    thumb_logo_path = os.path.join(save_dir, 'logo-thumb.png')
 
     try:
-        # Remove any existing poster files in the directory
+        # Remove any existing logo files in the directory
         for ext in ['jpg', 'jpeg', 'png']:
-            existing_poster = os.path.join(save_dir, f'poster.{ext}')
-            existing_thumb = os.path.join(save_dir, f'poster-thumb.{ext}')
-            if os.path.exists(existing_poster):
-                os.remove(existing_poster)
+            existing_logo = os.path.join(save_dir, f'logo.{ext}')
+            existing_thumb = os.path.join(save_dir, f'logo-thumb.{ext}')
+            if os.path.exists(existing_logo):
+                os.remove(existing_logo)
             if os.path.exists(existing_thumb):
                 os.remove(existing_thumb)
 
-        # Download the full-resolution poster from the URL
-        response = requests.get(poster_url)
+        # Download the full-resolution logo from the URL
+        response = requests.get(logo_url)
         if response.status_code == 200:
-            # Save the downloaded poster image
-            with open(full_poster_path, 'wb') as file:
+            # Save the downloaded logo image
+            with open(full_logo_path, 'wb') as file:
                 file.write(response.content)
 
             # Create a thumbnail using Pillow image processing library
-            with Image.open(full_poster_path) as img:
-                # Calculate aspect ratio to maintain consistent thumbnail dimensions
+            with Image.open(full_logo_path) as img:
+                # Logos are typically wider than tall, so we'll maintain aspect ratio
+                # and resize to a max width of 500px
+                max_width = 500
                 aspect_ratio = img.width / img.height
-                target_ratio = 300 / 450  # Desired thumbnail ratio
 
-                # Crop the image to match the target aspect ratio
-                if aspect_ratio > target_ratio:
-                    # Image is wider than desired ratio, crop the sides
-                    new_width = int(img.height * target_ratio)
-                    left = (img.width - new_width) // 2
-                    img = img.crop((left, 0, left + new_width, img.height))
+                # Calculate thumbnail dimensions maintaining aspect ratio
+                if img.width > max_width:
+                    new_width = max_width
+                    new_height = int(max_width / aspect_ratio)
                 else:
-                    # Image is taller than desired ratio, crop the top and bottom
-                    new_height = int(img.width / target_ratio)
-                    top = (img.height - new_height) // 2
-                    img = img.crop((0, top, img.width, top + new_height))
+                    new_width = img.width
+                    new_height = img.height
 
-                # Resize the image to 300x450 pixels with high-quality Lanczos resampling
-                img = img.resize((300, 450), Image.LANCZOS)
+                # Resize the image with high-quality Lanczos resampling
+                img_resized = img.resize((new_width, new_height), Image.LANCZOS)
 
-                # Save the thumbnail image with high JPEG quality
-                img.save(thumb_poster_path, "JPEG", quality=90)
+                # Save the thumbnail image as PNG to preserve transparency
+                img_resized.save(thumb_logo_path, "PNG", optimize=True)
 
-            print(f"Poster and thumbnail saved successfully for '{movie_title}'")
-            return full_poster_path  # Return the local path where the poster was saved
+            print(f"Logo and thumbnail saved successfully for '{movie_title}'")
+            return full_logo_path  # Return the local path where the logo was saved
         else:
-            print(f"Failed to download poster for '{movie_title}'. Status code: {response.status_code}")
+            print(f"Failed to download logo for '{movie_title}'. Status code: {response.status_code}")
             return None
 
     except Exception as e:
-        print(f"Error saving poster and generating thumbnail for '{movie_title}': {e}")
+        print(f"Error saving logo and generating thumbnail for '{movie_title}': {e}")
         return None
 
-# Route for handling poster selection and downloading
-@app.route('/select_poster', methods=['POST'])
-def select_poster():
+# Route for handling logo selection and downloading
+@app.route('/select_logo', methods=['POST'])
+def select_logo():
     # Log the received form data for debugging and tracking
     app.logger.info("Received form data: %s", request.form)
 
     # Validate that all required form data is present
-    if 'poster_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
+    if 'logo_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
         app.logger.error("Missing form data: %s", request.form)
         return "Bad Request: Missing form data", 400
 
     try:
-        # Extract form data for poster download
-        poster_url = request.form['poster_path']
+        # Extract form data for logo download
+        logo_url = request.form['logo_path']
         media_title = request.form['media_title']
         media_type = request.form['media_type']  # Should be either 'movie' or 'tv'
 
-        # Log detailed information about the poster selection
-        app.logger.info(f"Poster Path: {poster_url}, Media Title: {media_title}, Media Type: {media_type}")
+        # Log detailed information about the logo selection
+        app.logger.info(f"Logo Path: {logo_url}, Media Title: {media_title}, Media Type: {media_type}")
 
         # Select base folders based on media type (movies or TV shows)
         base_folders = movie_folders if media_type == 'movie' else tv_folders
@@ -352,27 +349,27 @@ def select_poster():
 
         # If an exact match is found, proceed with downloading
         if save_dir:
-            local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
-            if local_poster_path:
-                # Send Slack notification about successful poster download
-                message = f"Poster for '{media_title}' has been downloaded!"
-                send_slack_notification(message, local_poster_path, poster_url)
+            local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
+            if local_logo_path:
+                # Send Slack notification about successful logo download
+                message = f"Logo for '{media_title}' has been downloaded!"
+                send_slack_notification(message, local_logo_path, logo_url)
             return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # If no exact match, use best similarity match above a threshold
         similarity_threshold = 0.8
         if best_similarity >= similarity_threshold:
             save_dir = best_match_dir
-            local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
-            if local_poster_path:
-                # Send Slack notification about successful poster download
-                message = f"Poster for '{media_title}' has been downloaded!"
-                send_slack_notification(message, local_poster_path, poster_url)
+            local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
+            if local_logo_path:
+                # Send Slack notification about successful logo download
+                message = f"Logo for '{media_title}' has been downloaded!"
+                send_slack_notification(message, local_logo_path, logo_url)
             return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # If no suitable directory found, present user with directory selection options
         similar_dirs = get_close_matches(media_title, possible_dirs, n=5, cutoff=0.5)
-        return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, poster_path=poster_url, media_type=media_type)
+        return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, logo_path=logo_url, media_type=media_type)
 
     except FileNotFoundError as fnf_error:
         # Log and handle file not found errors
@@ -380,12 +377,12 @@ def select_poster():
         return "Directory not found", 404
     except Exception as e:
         # Log and handle any unexpected errors
-        app.logger.exception("Unexpected error in select_poster route: %s", e)
+        app.logger.exception("Unexpected error in select_logo route: %s", e)
         return "Internal Server Error", 500
 
-# Route for serving posters from the file system
-@app.route('/poster/<path:filename>')
-def serve_poster(filename):
+# Route for serving logos from the file system
+@app.route('/logo/<path:filename>')
+def serve_logo(filename):
     # Combine movie and TV folders to search both sets of paths
     base_folders = movie_folders + tv_folders
 
@@ -413,22 +410,22 @@ def serve_poster(filename):
     app.logger.error(f"File not found for {filename} in any base folder.")
     return "File not found", 404
 
-# Route for manually confirming the directory and saving the poster
+# Route for manually confirming the directory and saving the logo
 @app.route('/confirm_directory', methods=['POST'])
 def confirm_directory():
-    # Extract form data for manual poster directory selection
+    # Extract form data for manual logo directory selection
     selected_directory = request.form.get('selected_directory')
     movie_title = request.form.get('media_title')
-    poster_url = request.form.get('poster_path')
+    logo_url = request.form.get('logo_path')
     content_type = request.form.get('content_type', 'movie')  # Default to 'movie'
 
     # Log all received form data for debugging
-    app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, poster_url={poster_url}, content_type={content_type}")
+    app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, logo_url={logo_url}, content_type={content_type}")
 
     # Validate form data
-    if not selected_directory or not movie_title or not poster_url:
-        app.logger.error("Missing form data: selected_directory=%s, media_title=%s, poster_url=%s",
-                         selected_directory, movie_title, poster_url)
+    if not selected_directory or not movie_title or not logo_url:
+        app.logger.error("Missing form data: selected_directory=%s, media_title=%s, logo_url=%s",
+                         selected_directory, movie_title, logo_url)
         return "Bad Request: Missing form data", 400
 
     # Find the correct base folder for the selected directory
@@ -445,20 +442,20 @@ def confirm_directory():
         app.logger.error(f"Selected directory '{selected_directory}' not found in base folders.")
         return "Directory not found", 404
 
-    # Save the poster and get the local path
-    local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
-    if local_poster_path:
+    # Save the logo and get the local path
+    local_logo_path = save_logo_and_thumbnail(logo_url, movie_title, save_dir)
+    if local_logo_path:
         # Send Slack notification about successful download
-        message = f"Poster for '{movie_title}' has been downloaded!"
-        send_slack_notification(message, local_poster_path, poster_url)
-        app.logger.info(f"Poster successfully saved to {local_poster_path}")
+        message = f"Logo for '{movie_title}' has been downloaded!"
+        send_slack_notification(message, local_logo_path, logo_url)
+        app.logger.info(f"Logo successfully saved to {local_logo_path}")
     else:
-        app.logger.error(f"Failed to save poster for '{movie_title}'")
-        return "Failed to save poster", 500
+        app.logger.error(f"Failed to save logo for '{movie_title}'")
+        return "Failed to save logo", 500
 
     # Generate clean ID for navigation anchor
     anchor = generate_clean_id(movie_title)
-    
+
     # Determine redirect URL based on content type
     redirect_url = url_for('index') if content_type == 'movie' else url_for('tv_shows')
 
@@ -467,18 +464,18 @@ def confirm_directory():
 
     return redirect(f"{redirect_url}#{anchor}")
 
-# Function to send Slack notifications about poster downloads
-def send_slack_notification(message, local_poster_path, poster_url):
+# Function to send Slack notifications about logo downloads
+def send_slack_notification(message, local_logo_path, logo_url):
     # Retrieve Slack webhook URL from environment variables
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
     if slack_webhook_url:
-        # Prepare Slack payload with message and poster details
+        # Prepare Slack payload with message and logo details
         payload = {
             "text": message,
             "attachments": [
                 {
-                    "text": f"Poster saved to: {local_poster_path}",
-                    "image_url": poster_url  # Display original TMDb poster in Slack
+                    "text": f"Logo saved to: {local_logo_path}",
+                    "image_url": logo_url  # Display original TMDb logo in Slack
                 }
             ]
         }
@@ -486,7 +483,7 @@ def send_slack_notification(message, local_poster_path, poster_url):
             # Send notification to Slack
             response = requests.post(slack_webhook_url, json=payload)
             if response.status_code == 200:
-                print(f"Slack notification sent successfully for '{local_poster_path}'")
+                print(f"Slack notification sent successfully for '{local_logo_path}'")
             else:
                 print(f"Failed to send Slack notification. Status code: {response.status_code}")
         except Exception as e:
@@ -502,4 +499,4 @@ def refresh_page():
 # Main entry point for running the Flask application
 if __name__ == '__main__':
     # Start the app, listening on all network interfaces at port 5000
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
