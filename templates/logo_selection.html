@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select a Logo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Styling for the page */
+        body {
+            background-color: #343a40; /* Dark background color for better contrast */
+            color: #fff; /* Light text color for readability */
+        }
+        .logo-grid {
+            display: flex; /* Enables grid layout for logos */
+            flex-wrap: wrap; /* Allows wrapping of logos to the next row */
+            justify-content: center; /* Centers the logos in the container */
+            gap: 15px; /* Space between logo cards */
+        }
+        .logo-card {
+            width: 300px; /* Fixed width for each logo card (wider than posters) */
+            text-align: center; /* Centers text within the card */
+            background-color: #454d55; /* Card background */
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .logo-card img {
+            max-width: 100%; /* Makes logo images responsive */
+            max-height: 200px; /* Limit height for consistency */
+            border-radius: 8px; /* Rounded corners for images */
+            background-color: #212529; /* Dark background to show transparent logos */
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Page heading with the selected media title -->
+    <h1 class="my-4 text-center">Select a Logo for "{{ media_title }}"</h1>
+    <div class="logo-grid">
+        {% for logo in logos %}
+        <!-- Display each logo in a grid -->
+        <div class="logo-card">
+            <!-- Image of the logo -->
+            <img src="{{ logo.url }}" alt="Logo for {{ media_title }}">
+            <!-- Display resolution of the logo -->
+            <p><strong>Resolution:</strong> {{ logo.size }}</p>
+            <!-- Form for selecting the current logo -->
+            <form action="/select_logo" method="POST">
+                <!-- Hidden inputs to store necessary data for logo selection -->
+                <input type="hidden" name="logo_path" value="{{ logo.url }}">
+                <input type="hidden" name="media_title" value="{{ media_title }}">
+                <input type="hidden" name="media_type" value="{{ content_type }}">
+                <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
+                <input type="hidden" name="directory" value="{{ directory }}">
+                <!-- Button to submit the selection -->
+                <button type="submit" class="btn btn-primary mt-2">Select Logo</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+    // Ensure forms have the required data before submission
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            // Fetch input values from the form
+            const logoPath = form.querySelector('input[name="logo_path"]').value;
+            const mediaTitle = form.querySelector('input[name="media_title"]').value;
+            const mediaType = form.querySelector('input[name="media_type"]').value;
+            // Validate that all fields are filled
+            if (!logoPath || !mediaTitle || !mediaType) {
+                event.preventDefault(); // Prevent form submission
+                alert('Missing form data. Please try again.'); // Show an error message
+            }
+        });
+    });
+</script>
+</body>
+</html>

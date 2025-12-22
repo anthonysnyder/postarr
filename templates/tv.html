@@ -92,8 +92,8 @@
             <!-- Filter and refresh controls -->
             <input type="text" id="searchInput" placeholder="Filter TV Shows..." class="form-control">
             <div class="btn-group mt-2 mb-4" role="group">
-                <!-- Button to show TV shows without posters -->
-                <button class="btn btn-primary" onclick="filterTVShowsWithoutPoster()">Show TV Shows Without Poster</button>
+                <!-- Button to show TV shows without logos -->
+                <button class="btn btn-primary" onclick="filterTVShowsWithoutLogo()">Show TV Shows Without Logo</button>
                 <!-- Refresh button to reload data -->
                 <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
@@ -101,25 +101,25 @@
             <!-- Grid to display TV shows -->
             <div id="tvList" class="movie-grid">
                 {% for tv_show in tv_shows %}
-                <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-poster="{{ tv_show.has_poster | lower }}">
+                <div class="movie-card" id="{{ tv_show.clean_id }}" data-title="{{ tv_show.title | lower }}" data-has-logo="{{ tv_show.has_logo | lower }}">
                     <div>
                         <!-- Display the TV show's thumbnail or placeholder if none exists -->
-                        {% if tv_show.poster_thumb %}
-                        <img src="{{ tv_show.poster_thumb }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">
-                        {% elif tv_show.poster %}
-                        <img src="{{ tv_show.poster }}" alt="{{ tv_show.title }}" class="movie-poster" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv')">
+                        {% if tv_show.logo_thumb %}
+                        <img src="{{ tv_show.logo_thumb }}" alt="{{ tv_show.title }}" class="movie-logo" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv', '{{ tv_show.title }}')">
+                        {% elif tv_show.logo %}
+                        <img src="{{ tv_show.logo }}" alt="{{ tv_show.title }}" class="movie-logo" onclick="triggerSearch('{{ tv_show.clean_title }}', 'tv', '{{ tv_show.title }}')">
                         {% else %}
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
-                            <span>No Poster</span>
+                            <span>No Logo</span>
                         </div>
                         {% endif %}
                     </div>
                     <!-- Display the TV show's title and make it clickable -->
-                    <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ tv_show.title }}`, 'tv')">{{ tv_show.title }}</h5>          
+                    <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ tv_show.title }}`, 'tv', `{{ tv_show.title }}`)">{{ tv_show.title }}</h5>
                     <!-- Display additional details like resolution and modification date -->
                     <p class="text-center">
-                        <strong>Dimensions:</strong> {{ tv_show.poster_dimensions }} | 
-                        <strong>Last Modified:</strong> {{ tv_show.poster_last_modified }}
+                        <strong>Dimensions:</strong> {{ tv_show.logo_dimensions }} |
+                        <strong>Last Modified:</strong> {{ tv_show.logo_last_modified }}
                     </p>
                 </div>
                 {% endfor %}
@@ -130,15 +130,15 @@
 
 <script>
     // Function to trigger search
-    function triggerSearch(title, contentType) {
+    function triggerSearch(title, contentType, directoryName) {
         // Clean title by removing year and special characters
         const cleanTitle = title
             .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
             .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
             .trim(); // Trim leading/trailing spaces
 
-        // Redirect with sanitized title
-        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+        // Redirect with sanitized title AND the directory name
+        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}&directory=${encodeURIComponent(directoryName)}`;
     }
 
     // Function to filter TV shows based on the search input
@@ -152,24 +152,24 @@
         });
     });
 
-    // Function to filter TV shows without posters
-    function filterTVShowsWithoutPoster() {
+    // Function to filter TV shows without logos
+    function filterTVShowsWithoutLogo() {
         const tvShows = document.querySelectorAll('#tvList .movie-card');
 
         tvShows.forEach(function(tvShow) {
-            const hasPoster = tvShow.getAttribute('data-has-poster').toLowerCase(); // Normalize to lowercase
-            console.log(`TV Show: ${tvShow.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+            const hasLogo = tvShow.getAttribute('data-has-logo').toLowerCase(); // Normalize to lowercase
+            console.log(`TV Show: ${tvShow.getAttribute('data-title')}, Has Logo: ${hasLogo}`);
 
-            if (hasPoster === "true") {
-                tvShow.style.display = 'none';  // Hide TV shows with posters
+            if (hasLogo === "true") {
+                tvShow.style.display = 'none';  // Hide TV shows with logos
             } else {
-                tvShow.style.display = 'block';  // Show TV shows without posters
+                tvShow.style.display = 'block';  // Show TV shows without logos
             }
         });
     }
 
-    // Update the button's click event to call filterTVShowsWithoutPoster
-    document.querySelector('.btn-primary').addEventListener('click', filterTVShowsWithoutPoster);
+    // Update the button's click event to call filterTVShowsWithoutLogo
+    document.querySelector('.btn-primary').addEventListener('click', filterTVShowsWithoutLogo);
 </script>
 </body>
 </html>

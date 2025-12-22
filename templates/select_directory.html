@@ -25,7 +25,7 @@
         <h4>Debug Info:</h4>
         <ul>
             <li><strong>Media Title:</strong> {{ media_title }}</li>
-            <li><strong>Poster Path:</strong> {{ poster_path }}</li>
+            <li><strong>Logo Path:</strong> {{ logo_path }}</li>
             <li><strong>Content Type:</strong> {{ media_type }}</li>
             <li><strong>Directories:</strong> {{ similar_dirs }}</li>
         </ul>
@@ -34,9 +34,10 @@
     <!-- Form to Submit Directory -->
     <form action="{{ url_for('confirm_directory') }}" method="post" id="directory-form">
         <!-- Hidden inputs to pass necessary data -->
-        <input type="hidden" name="poster_path" value="{{ poster_path }}">
+        <input type="hidden" name="logo_path" value="{{ logo_path }}">
         <input type="hidden" name="media_title" value="{{ media_title }}">
         <input type="hidden" name="media_type" value="{{ media_type }}">
+        <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
 
         <!-- Directory Selection -->
         {% for directory in similar_dirs %}
@@ -47,7 +48,7 @@
         {% endfor %}
 
         <!-- Submit Button -->
-        <button type="submit">Save Poster</button>
+        <button type="submit">Save Logo</button>
     </form>
 
     <!-- JavaScript for Debugging and Submission -->
@@ -57,7 +58,7 @@
         // Debugging: Log form submission
         form.addEventListener('submit', function(event) {
             console.log('Form is submitting...');
-            console.log('Poster Path:', document.querySelector('input[name="poster_path"]').value);
+            console.log('Logo Path:', document.querySelector('input[name="logo_path"]').value);
             console.log('Media Title:', document.querySelector('input[name="media_title"]').value);
             console.log('Media Type:', document.querySelector('input[name="media_type"]').value);
             console.log('Selected Directory:', document.querySelector('input[name="selected_directory"]:checked')?.value);

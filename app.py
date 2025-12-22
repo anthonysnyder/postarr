@@ -2,6 +2,7 @@ import os
 import requests
 import re
 import urllib.parse
+import json
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from difflib import get_close_matches, SequenceMatcher  # For string similarity
 from PIL import Image  # For image processing
@@ -28,6 +29,9 @@ POSTER_BASE_URL = "https://image.tmdb.org/t/p/original"
 movie_folders = ["/movies", "/kids-movies", "/movies2", "/kids-movies2"]
 tv_folders = ["/tv", "/kids-tv", "/tv2", "/kids-tv2"]  # Multiple folders for flexibility
 
+# Path to the mapping file that stores TMDb ID -> Directory relationships
+MAPPING_FILE = os.path.join(os.path.dirname(__file__), 'tmdb_directory_mapping.json')
+
 # Function to normalize movie/TV show titles for consistent searching and comparison
 def normalize_title(title):
     # Remove all non-alphanumeric characters and convert to lowercase
@@ -44,6 +48,53 @@ def generate_clean_id(title):
     # Replace all non-alphanumeric characters with dashes and strip leading/trailing dashes
     clean_id = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
     return clean_id
+
+# Function to load the TMDb ID to directory mapping from disk
+def load_directory_mapping():
+    """Load the mapping file that remembers which TMDb IDs go to which directories"""
+    if os.path.exists(MAPPING_FILE):
+        try:
+            with open(MAPPING_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            app.logger.error(f"Error loading mapping file: {e}")
+            return {}
+    return {}
+
+# Function to save the TMDb ID to directory mapping to disk
+def save_directory_mapping(mapping):
+    """Save the mapping file to remember which TMDb IDs go to which directories"""
+    try:
+        with open(MAPPING_FILE, 'w') as f:
+            json.dump(mapping, f, indent=2)
+        app.logger.info(f"Saved directory mapping to {MAPPING_FILE}")
+    except Exception as e:
+        app.logger.error(f"Error saving mapping file: {e}")
+
+# Function to get directory from mapping for a given TMDb ID and media type
+def get_mapped_directory(tmdb_id, media_type):
+    """Check if we already know which directory this TMDb ID belongs to"""
+    mapping = load_directory_mapping()
+    key = f"{media_type}_{tmdb_id}"
+    mapped_dir = mapping.get(key)
+    if mapped_dir and os.path.exists(mapped_dir):
+        app.logger.info(f"Found existing mapping: {key} -> {mapped_dir}")
+        return mapped_dir
+    elif mapped_dir:
+        app.logger.warning(f"Mapped directory no longer exists: {mapped_dir}, removing mapping")
+        # Clean up invalid mapping
+        del mapping[key]
+        save_directory_mapping(mapping)
+    return None
+
+# Function to save a new TMDb ID to directory mapping
+def save_mapped_directory(tmdb_id, media_type, directory_path):
+    """Remember which directory this TMDb ID belongs to for next time"""
+    mapping = load_directory_mapping()
+    key = f"{media_type}_{tmdb_id}"
+    mapping[key] = directory_path
+    save_directory_mapping(mapping)
+    app.logger.info(f"Saved new mapping: {key} -> {directory_path}")
 
 # Function to retrieve media directories and their associated logo thumbnails
 def get_logo_thumbnails(base_folders=None):
@@ -133,8 +184,9 @@ def refresh():
 # Route for searching movies using TMDb API
 @app.route('/search_movie', methods=['GET'])
 def search_movie():
-    # Get search query from URL parameters
+    # Get search query and directory name from URL parameters
     query = request.args.get('query', '')
+    directory = request.args.get('directory', '')  # Get the directory name from the original movie card click
 
     # Search movies on TMDb using the API
     response = requests.get(f"{BASE_URL}/search/movie", params={"api_key": TMDB_API_KEY, "query": query})
@@ -144,23 +196,24 @@ def search_movie():
     for result in results:
         result['clean_id'] = generate_clean_id(result['title'])
 
-    # Render search results template
-    return render_template('search_results.html', query=query, results=results)
+    # Render search results template with directory name
+    return render_template('search_results.html', query=query, results=results, directory=directory)
 # Route for searching TV shows using TMDb API
 @app.route('/search_tv', methods=['GET'])
 def search_tv():
     # Decode the URL-encoded query parameter to handle special characters
     query = unquote(request.args.get('query', ''))
+    directory = request.args.get('directory', '')  # Get the directory name from the original TV show card click
 
     # Log the received search query for debugging purposes
-    app.logger.info(f"Search TV query received: {query}")
+    app.logger.info(f"Search TV query received: {query}, Directory: {directory}")
 
     # Send search request to TMDb API for TV shows, with filters for English-language results
     response = requests.get(f"{BASE_URL}/search/tv", params={
-        "api_key": TMDB_API_KEY, 
-        "query": query, 
-        "include_adult": False, 
-        "language": "en-US", 
+        "api_key": TMDB_API_KEY,
+        "query": query,
+        "include_adult": False,
+        "language": "en-US",
         "page": 1
     })
     results = response.json().get('results', [])
@@ -173,18 +226,23 @@ def search_tv():
         result['clean_id'] = generate_clean_id(result['name'])
         app.logger.info(f"Result processed: {result['name']} -> Clean ID: {result['clean_id']}")
 
-    # Render search results template with TV show results
-    return render_template('search_results.html', query=query, results=results, content_type="tv")
+    # Render search results template with TV show results and directory name
+    return render_template('search_results.html', query=query, results=results, content_type="tv", directory=directory)
 
 # Route for selecting a movie and displaying available logos
 @app.route('/select_movie/<int:movie_id>', methods=['GET'])
 def select_movie(movie_id):
+    # Get the directory name passed from the search results
+    directory = request.args.get('directory', '')
+
     # Fetch detailed information about the selected movie from TMDb API
     movie_details = requests.get(f"{BASE_URL}/movie/{movie_id}", params={"api_key": TMDB_API_KEY}).json()
 
     # Extract movie title and generate a clean ID for URL/anchor purposes
     movie_title = movie_details.get('title', '')
     clean_id = generate_clean_id(movie_title)
+
+    app.logger.info(f"Selected movie: {movie_title}, Directory from click: {directory}")
 
     # Request available logos for the selected movie from TMDb API
     logos = requests.get(f"{BASE_URL}/movie/{movie_id}/images", params={"api_key": TMDB_API_KEY}).json().get('logos', [])
@@ -206,18 +264,23 @@ def select_movie(movie_id):
         'language': logo['iso_639_1']
     } for logo in logos_sorted]
 
-    # Render logo selection template with sorted logos and movie details
-    return render_template('logo_selection.html', media_title=movie_title, content_type='movie', logos=formatted_logos)
+    # Render logo selection template with sorted logos, movie details, TMDb ID, and DIRECTORY
+    return render_template('logo_selection.html', media_title=movie_title, content_type='movie', logos=formatted_logos, tmdb_id=movie_id, directory=directory)
 
 # Route for selecting a TV show and displaying available logos
 @app.route('/select_tv/<int:tv_id>', methods=['GET'])
 def select_tv(tv_id):
+    # Get the directory name passed from the search results
+    directory = request.args.get('directory', '')
+
     # Fetch detailed information about the selected TV show from TMDb API
     tv_details = requests.get(f"{BASE_URL}/tv/{tv_id}", params={"api_key": TMDB_API_KEY}).json()
 
     # Extract TV show title and generate a clean ID for URL/anchor purposes
     tv_title = tv_details.get('name', '')
     clean_id = generate_clean_id(tv_title)
+
+    app.logger.info(f"Selected TV show: {tv_title}, Directory from click: {directory}")
 
     # Request available logos for the selected TV show from TMDb API
     logos = requests.get(f"{BASE_URL}/tv/{tv_id}/images", params={"api_key": TMDB_API_KEY}).json().get('logos', [])
@@ -235,8 +298,8 @@ def select_tv(tv_id):
         'language': logo['iso_639_1']
     } for logo in logos_sorted]
 
-    # Render logo selection template with sorted logos, TV show details, and content type
-    return render_template('logo_selection.html', logos=formatted_logos, media_title=tv_title, clean_id=clean_id, content_type="tv")
+    # Render logo selection template with sorted logos, TV show details, content type, TMDb ID, and DIRECTORY
+    return render_template('logo_selection.html', logos=formatted_logos, media_title=tv_title, clean_id=clean_id, content_type="tv", tmdb_id=tv_id, directory=directory)
 
 # Function to handle logo download and thumbnail creation
 def save_logo_and_thumbnail(logo_url, movie_title, save_dir):
@@ -308,9 +371,11 @@ def select_logo():
         logo_url = request.form['logo_path']
         media_title = request.form['media_title']
         media_type = request.form['media_type']  # Should be either 'movie' or 'tv'
+        tmdb_id = request.form.get('tmdb_id')  # Get TMDb ID if available
+        directory = request.form.get('directory', '')  # Get the directory name from the original card click!
 
         # Log detailed information about the logo selection
-        app.logger.info(f"Logo Path: {logo_url}, Media Title: {media_title}, Media Type: {media_type}")
+        app.logger.info(f"Logo Path: {logo_url}, Media Title: {media_title}, Media Type: {media_type}, TMDb ID: {tmdb_id}, Directory: {directory}")
 
         # Select base folders based on media type (movies or TV shows)
         base_folders = movie_folders if media_type == 'movie' else tv_folders
@@ -320,6 +385,37 @@ def select_logo():
         possible_dirs = []
         best_similarity = 0
         best_match_dir = None
+
+        # FIRST: If we have the directory name from the original click, use it directly!
+        if directory:
+            # Find the exact directory in the base folders
+            for base_folder in base_folders:
+                potential_path = os.path.join(base_folder, directory)
+                if os.path.exists(potential_path) and os.path.isdir(potential_path):
+                    save_dir = potential_path
+                    app.logger.info(f"Using directory from original click: {save_dir}")
+                    # Save the TMDb ID mapping for future use
+                    if tmdb_id:
+                        save_mapped_directory(tmdb_id, media_type, save_dir)
+                    # Save the logo
+                    local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
+                    if local_logo_path:
+                        message = f"Logo for '{media_title}' has been downloaded!"
+                        send_slack_notification(message, local_logo_path, logo_url)
+                    return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
+
+        # SECOND: Check if we have a saved mapping for this TMDb ID
+        if tmdb_id:
+            mapped_dir = get_mapped_directory(tmdb_id, media_type)
+            if mapped_dir:
+                app.logger.info(f"Using previously saved directory mapping for {media_type}_{tmdb_id}: {mapped_dir}")
+                save_dir = mapped_dir
+                # Skip the fuzzy matching logic and go straight to saving
+                local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
+                if local_logo_path:
+                    message = f"Logo for '{media_title}' has been downloaded!"
+                    send_slack_notification(message, local_logo_path, logo_url)
+                return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # Normalize media title for comparison
         normalized_media_title = normalize_title(media_title)
@@ -334,21 +430,33 @@ def select_logo():
                 # Calculate string similarity between media title and directory name
                 similarity = SequenceMatcher(None, normalized_media_title, normalized_dir_name).ratio()
 
+                # Log the comparison for debugging
+                app.logger.info(f"Comparing '{media_title}' (normalized: '{normalized_media_title}') with directory '{directory}' (normalized: '{normalized_dir_name}'). Similarity: {similarity:.3f}")
+
                 # Update best match if current similarity is higher
                 if similarity > best_similarity:
                     best_similarity = similarity
                     best_match_dir = os.path.join(base_folder, directory)
+                    app.logger.info(f"New best match: '{directory}' with similarity {similarity:.3f}")
 
-                # If exact match found, set save directory
-                if directory == media_title:
+                # Check for exact match (case-insensitive and normalized)
+                if normalized_media_title == normalized_dir_name:
                     save_dir = os.path.join(base_folder, directory)
+                    app.logger.info(f"Exact match found: '{directory}'")
                     break
 
             if save_dir:
                 break
 
+        # Log final matching result
+        app.logger.info(f"Best similarity: {best_similarity:.3f}, Best match dir: {best_match_dir}, Exact match dir: {save_dir}")
+
         # If an exact match is found, proceed with downloading
         if save_dir:
+            # Save the TMDb ID mapping for future use
+            if tmdb_id:
+                save_mapped_directory(tmdb_id, media_type, save_dir)
+
             local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
             if local_logo_path:
                 # Send Slack notification about successful logo download
@@ -357,9 +465,16 @@ def select_logo():
             return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # If no exact match, use best similarity match above a threshold
-        similarity_threshold = 0.8
+        # Increased threshold to 0.9 to prevent false matches between similar titles
+        similarity_threshold = 0.9
         if best_similarity >= similarity_threshold:
+            app.logger.info(f"Using best match '{best_match_dir}' (similarity: {best_similarity:.3f})")
             save_dir = best_match_dir
+
+            # Save the TMDb ID mapping for future use
+            if tmdb_id:
+                save_mapped_directory(tmdb_id, media_type, save_dir)
+
             local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
             if local_logo_path:
                 # Send Slack notification about successful logo download
@@ -369,7 +484,7 @@ def select_logo():
 
         # If no suitable directory found, present user with directory selection options
         similar_dirs = get_close_matches(media_title, possible_dirs, n=5, cutoff=0.5)
-        return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, logo_path=logo_url, media_type=media_type)
+        return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, logo_path=logo_url, media_type=media_type, tmdb_id=tmdb_id)
 
     except FileNotFoundError as fnf_error:
         # Log and handle file not found errors
@@ -417,10 +532,11 @@ def confirm_directory():
     selected_directory = request.form.get('selected_directory')
     movie_title = request.form.get('media_title')
     logo_url = request.form.get('logo_path')
-    content_type = request.form.get('content_type', 'movie')  # Default to 'movie'
+    content_type = request.form.get('media_type', 'movie')  # Use 'media_type' to match the form field
+    tmdb_id = request.form.get('tmdb_id')  # Get TMDb ID if available
 
     # Log all received form data for debugging
-    app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, logo_url={logo_url}, content_type={content_type}")
+    app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, logo_url={logo_url}, content_type={content_type}, tmdb_id={tmdb_id}")
 
     # Validate form data
     if not selected_directory or not movie_title or not logo_url:
@@ -441,6 +557,11 @@ def confirm_directory():
         # Log an error if directory not found
         app.logger.error(f"Selected directory '{selected_directory}' not found in base folders.")
         return "Directory not found", 404
+
+    # Save the TMDb ID mapping for future use (this is the key part - remember this selection!)
+    if tmdb_id:
+        save_mapped_directory(tmdb_id, content_type, save_dir)
+        app.logger.info(f"Saved mapping for future: {content_type}_{tmdb_id} -> {save_dir}")
 
     # Save the logo and get the local path
     local_logo_path = save_logo_and_thumbnail(logo_url, movie_title, save_dir)

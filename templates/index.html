@@ -95,34 +95,34 @@
 
             <!-- Buttons for filtering and refreshing -->
             <div class="btn-group mt-2 mb-4" role="group">
-                <button class="btn btn-primary" onclick="filterMoviesWithoutPoster()">Show Movies Without Poster</button>
+                <button class="btn btn-primary" onclick="filterMoviesWithoutLogo()">Show Movies Without Logo</button>
                 <button onclick="location.href='/refresh'" class="btn btn-secondary">Refresh</button>
             </div>
 
             <!-- Grid for displaying movies -->
             <div id="movieList" class="movie-grid">
                 {% for movie in movies %}
-                <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}" data-has-poster="{{ movie.has_poster }}">
+                <div class="movie-card" id="{{ movie.clean_id }}" data-title="{{ movie.title | lower }}" data-has-logo="{{ movie.has_logo }}">
                     <div>
-                        <!-- Display movie poster if available -->
-                        {% if movie.poster_thumb %}
-                        <img src="{{ movie.poster_thumb }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}', 'movie')">
-                        {% elif movie.poster %}
-                        <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onclick="triggerSearch('{{ movie.title }}', 'movie')">
+                        <!-- Display movie logo if available -->
+                        {% if movie.logo_thumb %}
+                        <img src="{{ movie.logo_thumb }}" alt="{{ movie.title }}" class="movie-logo" onclick="triggerSearch('{{ movie.title }}', 'movie', '{{ movie.title }}')">
+                        {% elif movie.logo %}
+                        <img src="{{ movie.logo }}" alt="{{ movie.title }}" class="movie-logo" onclick="triggerSearch('{{ movie.title }}', 'movie', '{{ movie.title }}')"
                         {% else %}
-                        <!-- Placeholder for movies without posters -->
+                        <!-- Placeholder for movies without logos -->
                         <div class="img-thumbnail bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
-                            <span>No Poster</span>
+                            <span>No Logo</span>
                         </div>
                         {% endif %}
                     </div>
                     <!-- Movie title with clickable functionality -->
-                    <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ movie.title }}`, 'movie')">{{ movie.title }}</h5>
-            
-                    <!-- Display poster dimensions and last modified date -->
+                    <h5 class="mt-2 text-center" onclick="triggerSearch(`{{ movie.title }}`, 'movie', `{{ movie.title }}`)">{{ movie.title }}</h5>
+
+                    <!-- Display logo dimensions and last modified date -->
                     <p class="text-center">
-                        <strong>Dimensions:</strong> {{ movie.poster_dimensions }} | 
-                        <strong>Last Modified:</strong> {{ movie.poster_last_modified }}
+                        <strong>Dimensions:</strong> {{ movie.logo_dimensions }} |
+                        <strong>Last Modified:</strong> {{ movie.logo_last_modified }}
                     </p>
                 </div>
                 {% endfor %}
@@ -133,15 +133,15 @@
 
 <script>
     // Function to trigger search for a movie
-    function triggerSearch(title, contentType) {
+    function triggerSearch(title, contentType, directoryName) {
         // Clean the title by removing unwanted characters
         const cleanTitle = title
             .replace(/\(\d{4}\)/g, '') // Remove the year in parentheses
             .replace(/[^a-zA-Z0-9\s]/g, '') // Remove all non-alphanumeric characters except spaces
             .trim(); // Trim leading/trailing spaces
 
-        // Redirect with the cleaned title
-        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}`;
+        // Redirect with the cleaned title AND the directory name
+        window.location.href = `/search_${contentType}?query=${encodeURIComponent(cleanTitle.toLowerCase())}&directory=${encodeURIComponent(directoryName)}`;
     }
 
     // Filter movies based on search input
@@ -155,24 +155,24 @@
         });
     });
 
-    // Function to show movies without posters
-    function filterMoviesWithoutPoster() {
+    // Function to show movies without logos
+    function filterMoviesWithoutLogo() {
         const movies = document.querySelectorAll('#movieList .movie-card');
 
         movies.forEach(function(movie) {
-            const hasPoster = movie.getAttribute('data-has-poster').toLowerCase(); // Normalize to lowercase
-            console.log(`Movie: ${movie.getAttribute('data-title')}, Has Poster: ${hasPoster}`);
+            const hasLogo = movie.getAttribute('data-has-logo').toLowerCase(); // Normalize to lowercase
+            console.log(`Movie: ${movie.getAttribute('data-title')}, Has Logo: ${hasLogo}`);
 
-            if (hasPoster === "true") {
-                movie.style.display = 'none';  // Hide movies with posters
+            if (hasLogo === "true") {
+                movie.style.display = 'none';  // Hide movies with logos
             } else {
-                movie.style.display = 'block';  // Show movies without posters
+                movie.style.display = 'block';  // Show movies without logos
             }
         });
     }
 
-    // Update the button's click event to call filterMoviesWithoutPoster
-    document.querySelector('.btn-primary').addEventListener('click', filterMoviesWithoutPoster);
+    // Update the button's click event to call filterMoviesWithoutLogo
+    document.querySelector('.btn-primary').addEventListener('click', filterMoviesWithoutLogo);
 </script>
 </body>
 </html>
