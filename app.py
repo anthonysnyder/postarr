@@ -112,7 +112,7 @@ def get_logo_thumbnails(base_folders=None):
         base_folders = movie_folders
     media_list = []
 
-    # Iterate through specified base folders to find media with logos
+    # Iterate through specified base folders to find media with posters
     for base_folder in base_folders:
         for media_dir in sorted(os.listdir(base_folder)):
             if media_dir.lower() in ["@eadir", "#recycle"]:  # Skip Synology NAS system folders (case-insensitive)
@@ -166,7 +166,7 @@ def get_logo_thumbnails(base_folders=None):
     media_list = sorted(media_list, key=lambda x: strip_leading_the(x['title'].lower()))
     return media_list, len(media_list)
 
-# Route for the main index page showing movie logos
+# Route for the main index page showing movie posters
 @app.route('/')
 def index():
     movies, total_movies = get_logo_thumbnails(movie_folders)
@@ -238,7 +238,7 @@ def search_tv():
     # Render search results template with TV show results and directory name
     return render_template('search_results.html', query=query, results=results, content_type="tv", directory=directory)
 
-# Route for selecting a movie and displaying available logos
+# Route for selecting a movie and displaying available posters
 @app.route('/select_movie/<int:movie_id>', methods=['GET'])
 def select_movie(movie_id):
     # Get the directory name passed from the search results
@@ -253,30 +253,30 @@ def select_movie(movie_id):
 
     app.logger.info(f"Selected movie: {movie_title}, Directory from click: {directory}")
 
-    # Request available logos for the selected movie from TMDb API
-    logos = requests.get(f"{BASE_URL}/movie/{movie_id}/images", params={"api_key": TMDB_API_KEY}).json().get('logos', [])
+    # Request available posters for the selected movie from TMDb API
+    posters = requests.get(f"{BASE_URL}/movie/{movie_id}/images", params={"api_key": TMDB_API_KEY}).json().get('posters', [])
 
-    # Filter logos to include only English language logos
-    logos = [logo for logo in logos if logo['iso_639_1'] == 'en']
+    # Filter posters to include only English language posters or null language (no text)
+    posters = [poster for poster in posters if poster['iso_639_1'] in ['en', None]]
 
-    # Function to calculate logo resolution for sorting
-    def logo_resolution(logo):
-        return logo['width'] * logo['height']  # Calculate area of the logo
+    # Function to calculate poster resolution for sorting
+    def poster_resolution(poster):
+        return poster['width'] * poster['height']  # Calculate area of the poster
 
-    # Sort logos by resolution in descending order (highest resolution first)
-    logos_sorted = sorted(logos, key=logo_resolution, reverse=True)
+    # Sort posters by resolution in descending order (highest resolution first)
+    posters_sorted = sorted(posters, key=poster_resolution, reverse=True)
 
-    # Format logo details for display, including full URL, dimensions, and language
-    formatted_logos = [{
-        'url': f"{POSTER_BASE_URL}{logo['file_path']}",
-        'size': f"{logo['width']}x{logo['height']}",
-        'language': logo['iso_639_1']
-    } for logo in logos_sorted]
+    # Format poster details for display, including full URL, dimensions, and language
+    formatted_posters = [{
+        'url': f"{POSTER_BASE_URL}{poster['file_path']}",
+        'size': f"{poster['width']}x{poster['height']}",
+        'language': poster['iso_639_1']
+    } for poster in posters_sorted]
 
-    # Render logo selection template with sorted logos, movie details, TMDb ID, and DIRECTORY
-    return render_template('logo_selection.html', media_title=movie_title, content_type='movie', logos=formatted_logos, tmdb_id=movie_id, directory=directory)
+    # Render poster selection template with sorted posters, movie details, TMDb ID, and DIRECTORY
+    return render_template('logo_selection.html', media_title=movie_title, content_type='movie', logos=formatted_posters, tmdb_id=movie_id, directory=directory)
 
-# Route for selecting a TV show and displaying available logos
+# Route for selecting a TV show and displaying available posters
 @app.route('/select_tv/<int:tv_id>', methods=['GET'])
 def select_tv(tv_id):
     # Get the directory name passed from the search results
@@ -291,26 +291,26 @@ def select_tv(tv_id):
 
     app.logger.info(f"Selected TV show: {tv_title}, Directory from click: {directory}")
 
-    # Request available logos for the selected TV show from TMDb API
-    logos = requests.get(f"{BASE_URL}/tv/{tv_id}/images", params={"api_key": TMDB_API_KEY}).json().get('logos', [])
+    # Request available posters for the selected TV show from TMDb API
+    posters = requests.get(f"{BASE_URL}/tv/{tv_id}/images", params={"api_key": TMDB_API_KEY}).json().get('posters', [])
 
-    # Filter logos to include only English language logos
-    logos = [logo for logo in logos if logo['iso_639_1'] == 'en']
+    # Filter posters to include only English language posters or null language (no text)
+    posters = [poster for poster in posters if poster['iso_639_1'] in ['en', None]]
 
-    # Sort logos by resolution in descending order (highest resolution first)
-    logos_sorted = sorted(logos, key=lambda p: p['width'] * p['height'], reverse=True)
+    # Sort posters by resolution in descending order (highest resolution first)
+    posters_sorted = sorted(posters, key=lambda p: p['width'] * p['height'], reverse=True)
 
-    # Format logo details for display, including full URL, dimensions, and language
-    formatted_logos = [{
-        'url': f"{POSTER_BASE_URL}{logo['file_path']}",
-        'size': f"{logo['width']}x{logo['height']}",
-        'language': logo['iso_639_1']
-    } for logo in logos_sorted]
+    # Format poster details for display, including full URL, dimensions, and language
+    formatted_posters = [{
+        'url': f"{POSTER_BASE_URL}{poster['file_path']}",
+        'size': f"{poster['width']}x{poster['height']}",
+        'language': poster['iso_639_1']
+    } for poster in posters_sorted]
 
-    # Render logo selection template with sorted logos, TV show details, content type, TMDb ID, and DIRECTORY
-    return render_template('logo_selection.html', logos=formatted_logos, media_title=tv_title, clean_id=clean_id, content_type="tv", tmdb_id=tv_id, directory=directory)
+    # Render poster selection template with sorted posters, TV show details, content type, TMDb ID, and DIRECTORY
+    return render_template('logo_selection.html', logos=formatted_posters, media_title=tv_title, clean_id=clean_id, content_type="tv", tmdb_id=tv_id, directory=directory)
 
-# Function to handle logo download and thumbnail creation
+# Function to handle poster download and thumbnail creation
 def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
     # Define full paths for the poster and thumbnail (JPG format for posters)
     full_poster_path = os.path.join(save_dir, 'poster.jpg')
@@ -335,8 +335,8 @@ def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
 
             # Create a thumbnail using Pillow image processing library
             with Image.open(full_poster_path) as img:
-                # Logos are typically wider than tall, so we'll maintain aspect ratio
-                # and resize to a max width of 500px
+                # Posters are typically taller than wide, so we'll maintain aspect ratio
+                # and resize to a max width of 500px for thumbnails
                 max_width = 500
                 aspect_ratio = img.width / img.height
 
