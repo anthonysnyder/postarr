@@ -45,16 +45,16 @@
             <img src="{{ logo.url }}" alt="Logo for {{ media_title }}">
             <!-- Display resolution of the logo -->
             <p><strong>Resolution:</strong> {{ logo.size }}</p>
-            <!-- Form for selecting the current logo -->
-            <form action="/select_logo" method="POST">
-                <!-- Hidden inputs to store necessary data for logo selection -->
-                <input type="hidden" name="logo_path" value="{{ logo.url }}">
+            <!-- Form for selecting the current poster -->
+            <form action="/select_poster" method="POST">
+                <!-- Hidden inputs to store necessary data for poster selection -->
+                <input type="hidden" name="poster_path" value="{{ logo.url }}">
                 <input type="hidden" name="media_title" value="{{ media_title }}">
                 <input type="hidden" name="media_type" value="{{ content_type }}">
                 <input type="hidden" name="tmdb_id" value="{{ tmdb_id }}">
                 <input type="hidden" name="directory" value="{{ directory }}">
                 <!-- Button to submit the selection -->
-                <button type="submit" class="btn btn-primary mt-2">Select Logo</button>
+                <button type="submit" class="btn btn-primary mt-2">Select Poster</button>
             </form>
         </div>
         {% endfor %}
@@ -65,11 +65,11 @@
     document.querySelectorAll('form').forEach(form => {
         form.addEventListener('submit', function(event) {
             // Fetch input values from the form
-            const logoPath = form.querySelector('input[name="logo_path"]').value;
+            const posterPath = form.querySelector('input[name="poster_path"]').value;
             const mediaTitle = form.querySelector('input[name="media_title"]').value;
             const mediaType = form.querySelector('input[name="media_type"]').value;
             // Validate that all fields are filled
-            if (!logoPath || !mediaTitle || !mediaType) {
+            if (!posterPath || !mediaTitle || !mediaType) {
                 event.preventDefault(); // Prevent form submission
                 alert('Missing form data. Please try again.'); // Show an error message
             }
