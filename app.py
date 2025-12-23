@@ -126,27 +126,27 @@ def get_logo_thumbnails(base_folders=None):
                 logo_dimensions = None
                 logo_last_modified = None
 
-                # Search for logo files in PNG format (logos typically have transparency)
-                for ext in ['png', 'jpg', 'jpeg']:
-                    thumb_path = os.path.join(media_path, f"logo-thumb.{ext}")
-                    logo_path = os.path.join(media_path, f"logo.{ext}")
+                # Search for poster files (posters are typically JPG format)
+                for ext in ['jpg', 'jpeg', 'png']:
+                    thumb_path = os.path.join(media_path, f"poster-thumb.{ext}")
+                    poster_path = os.path.join(media_path, f"poster.{ext}")
 
-                    # Store thumbnail and full logo paths for web serving
+                    # Store thumbnail and full poster paths for web serving
                     if os.path.exists(thumb_path):
-                        logo_thumb = f"/logo/{urllib.parse.quote(media_dir)}/logo-thumb.{ext}"
+                        logo_thumb = f"/logo/{urllib.parse.quote(media_dir)}/poster-thumb.{ext}"
 
-                    if os.path.exists(logo_path):
-                        logo = f"/logo/{urllib.parse.quote(media_dir)}/logo.{ext}"
+                    if os.path.exists(poster_path):
+                        logo = f"/logo/{urllib.parse.quote(media_dir)}/poster.{ext}"
 
-                        # Get logo image dimensions
+                        # Get poster image dimensions
                         try:
-                            with Image.open(logo_path) as img:
+                            with Image.open(poster_path) as img:
                                 logo_dimensions = f"{img.width}x{img.height}"
                         except Exception:
                             logo_dimensions = "Unknown"
 
-                        # Get last modified timestamp of the logo
-                        timestamp = os.path.getmtime(logo_path)
+                        # Get last modified timestamp of the poster
+                        timestamp = os.path.getmtime(poster_path)
                         logo_last_modified = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
                         break
 
@@ -311,30 +311,30 @@ def select_tv(tv_id):
     return render_template('logo_selection.html', logos=formatted_logos, media_title=tv_title, clean_id=clean_id, content_type="tv", tmdb_id=tv_id, directory=directory)
 
 # Function to handle logo download and thumbnail creation
-def save_logo_and_thumbnail(logo_url, movie_title, save_dir):
-    # Define full paths for the logo and thumbnail (PNG to preserve transparency)
-    full_logo_path = os.path.join(save_dir, 'logo.png')
-    thumb_logo_path = os.path.join(save_dir, 'logo-thumb.png')
+def save_poster_and_thumbnail(poster_url, movie_title, save_dir):
+    # Define full paths for the poster and thumbnail (JPG format for posters)
+    full_poster_path = os.path.join(save_dir, 'poster.jpg')
+    thumb_poster_path = os.path.join(save_dir, 'poster-thumb.jpg')
 
     try:
-        # Remove any existing logo files in the directory
+        # Remove any existing poster files in the directory
         for ext in ['jpg', 'jpeg', 'png']:
-            existing_logo = os.path.join(save_dir, f'logo.{ext}')
-            existing_thumb = os.path.join(save_dir, f'logo-thumb.{ext}')
-            if os.path.exists(existing_logo):
-                os.remove(existing_logo)
+            existing_poster = os.path.join(save_dir, f'poster.{ext}')
+            existing_thumb = os.path.join(save_dir, f'poster-thumb.{ext}')
+            if os.path.exists(existing_poster):
+                os.remove(existing_poster)
             if os.path.exists(existing_thumb):
                 os.remove(existing_thumb)
 
-        # Download the full-resolution logo from the URL
-        response = requests.get(logo_url)
+        # Download the full-resolution poster from the URL
+        response = requests.get(poster_url)
         if response.status_code == 200:
-            # Save the downloaded logo image
-            with open(full_logo_path, 'wb') as file:
+            # Save the downloaded poster image
+            with open(full_poster_path, 'wb') as file:
                 file.write(response.content)
 
             # Create a thumbnail using Pillow image processing library
-            with Image.open(full_logo_path) as img:
+            with Image.open(full_poster_path) as img:
                 # Logos are typically wider than tall, so we'll maintain aspect ratio
                 # and resize to a max width of 500px
                 max_width = 500
@@ -351,40 +351,40 @@ def save_logo_and_thumbnail(logo_url, movie_title, save_dir):
                 # Resize the image with high-quality Lanczos resampling
                 img_resized = img.resize((new_width, new_height), Image.LANCZOS)
 
-                # Save the thumbnail image as PNG to preserve transparency
-                img_resized.save(thumb_logo_path, "PNG", optimize=True)
+                # Save the thumbnail image as JPG
+                img_resized.save(thumb_poster_path, "JPEG", optimize=True, quality=85)
 
-            print(f"Logo and thumbnail saved successfully for '{movie_title}'")
-            return full_logo_path  # Return the local path where the logo was saved
+            print(f"Poster and thumbnail saved successfully for '{movie_title}'")
+            return full_poster_path  # Return the local path where the poster was saved
         else:
-            print(f"Failed to download logo for '{movie_title}'. Status code: {response.status_code}")
+            print(f"Failed to download poster for '{movie_title}'. Status code: {response.status_code}")
             return None
 
     except Exception as e:
-        print(f"Error saving logo and generating thumbnail for '{movie_title}': {e}")
+        print(f"Error saving poster and generating thumbnail for '{movie_title}': {e}")
         return None
 
-# Route for handling logo selection and downloading
-@app.route('/select_logo', methods=['POST'])
-def select_logo():
+# Route for handling poster selection and downloading
+@app.route('/select_poster', methods=['POST'])
+def select_poster():
     # Log the received form data for debugging and tracking
     app.logger.info("Received form data: %s", request.form)
 
     # Validate that all required form data is present
-    if 'logo_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
+    if 'poster_path' not in request.form or 'media_title' not in request.form or 'media_type' not in request.form:
         app.logger.error("Missing form data: %s", request.form)
         return "Bad Request: Missing form data", 400
 
     try:
-        # Extract form data for logo download
-        logo_url = request.form['logo_path']
+        # Extract form data for poster download
+        poster_url = request.form['poster_path']
         media_title = request.form['media_title']
         media_type = request.form['media_type']  # Should be either 'movie' or 'tv'
         tmdb_id = request.form.get('tmdb_id')  # Get TMDb ID if available
         directory = request.form.get('directory', '')  # Get the directory name from the original card click!
 
-        # Log detailed information about the logo selection
-        app.logger.info(f"Logo Path: {logo_url}, Media Title: {media_title}, Media Type: {media_type}, TMDb ID: {tmdb_id}, Directory: {directory}")
+        # Log detailed information about the poster selection
+        app.logger.info(f"Poster Path: {poster_url}, Media Title: {media_title}, Media Type: {media_type}, TMDb ID: {tmdb_id}, Directory: {directory}")
 
         # Select base folders based on media type (movies or TV shows)
         base_folders = movie_folders if media_type == 'movie' else tv_folders
@@ -407,10 +407,10 @@ def select_logo():
                     if tmdb_id:
                         save_mapped_directory(tmdb_id, media_type, save_dir)
                     # Save the logo
-                    local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
-                    if local_logo_path:
-                        message = f"Logo for '{media_title}' has been downloaded!"
-                        send_slack_notification(message, local_logo_path, logo_url)
+                    local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
+                    if local_poster_path:
+                        message = f"Poster for '{media_title}' has been downloaded!"
+                        send_slack_notification(message, local_poster_path, poster_url)
                     return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # SECOND: Check if we have a saved mapping for this TMDb ID
@@ -420,10 +420,10 @@ def select_logo():
                 app.logger.info(f"Using previously saved directory mapping for {media_type}_{tmdb_id}: {mapped_dir}")
                 save_dir = mapped_dir
                 # Skip the fuzzy matching logic and go straight to saving
-                local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
-                if local_logo_path:
-                    message = f"Logo for '{media_title}' has been downloaded!"
-                    send_slack_notification(message, local_logo_path, logo_url)
+                local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
+                if local_poster_path:
+                    message = f"Poster for '{media_title}' has been downloaded!"
+                    send_slack_notification(message, local_poster_path, poster_url)
                 return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # Normalize media title for comparison
@@ -466,11 +466,11 @@ def select_logo():
             if tmdb_id:
                 save_mapped_directory(tmdb_id, media_type, save_dir)
 
-            local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
-            if local_logo_path:
+            local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
+            if local_poster_path:
                 # Send Slack notification about successful logo download
-                message = f"Logo for '{media_title}' has been downloaded!"
-                send_slack_notification(message, local_logo_path, logo_url)
+                message = f"Poster for '{media_title}' has been downloaded!"
+                send_slack_notification(message, local_poster_path, poster_url)
             return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # If no exact match, use best similarity match above a threshold
@@ -484,16 +484,16 @@ def select_logo():
             if tmdb_id:
                 save_mapped_directory(tmdb_id, media_type, save_dir)
 
-            local_logo_path = save_logo_and_thumbnail(logo_url, media_title, save_dir)
-            if local_logo_path:
+            local_poster_path = save_poster_and_thumbnail(poster_url, media_title, save_dir)
+            if local_poster_path:
                 # Send Slack notification about successful logo download
-                message = f"Logo for '{media_title}' has been downloaded!"
-                send_slack_notification(message, local_logo_path, logo_url)
+                message = f"Poster for '{media_title}' has been downloaded!"
+                send_slack_notification(message, local_poster_path, poster_url)
             return redirect(url_for('tv_shows' if media_type == 'tv' else 'index') + f"#{generate_clean_id(media_title)}")
 
         # If no suitable directory found, present user with directory selection options
         similar_dirs = get_close_matches(media_title, possible_dirs, n=5, cutoff=0.5)
-        return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, logo_path=logo_url, media_type=media_type, tmdb_id=tmdb_id)
+        return render_template('select_directory.html', similar_dirs=similar_dirs, media_title=media_title, logo_path=poster_url, media_type=media_type, tmdb_id=tmdb_id)
 
     except FileNotFoundError as fnf_error:
         # Log and handle file not found errors
@@ -540,17 +540,17 @@ def confirm_directory():
     # Extract form data for manual logo directory selection
     selected_directory = request.form.get('selected_directory')
     movie_title = request.form.get('media_title')
-    logo_url = request.form.get('logo_path')
+    poster_url = request.form.get('logo_path')
     content_type = request.form.get('media_type', 'movie')  # Use 'media_type' to match the form field
     tmdb_id = request.form.get('tmdb_id')  # Get TMDb ID if available
 
     # Log all received form data for debugging
-    app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, logo_url={logo_url}, content_type={content_type}, tmdb_id={tmdb_id}")
+    app.logger.info(f"Received data: selected_directory={selected_directory}, movie_title={movie_title}, poster_url={poster_url}, content_type={content_type}, tmdb_id={tmdb_id}")
 
     # Validate form data
-    if not selected_directory or not movie_title or not logo_url:
-        app.logger.error("Missing form data: selected_directory=%s, media_title=%s, logo_url=%s",
-                         selected_directory, movie_title, logo_url)
+    if not selected_directory or not movie_title or not poster_url:
+        app.logger.error("Missing form data: selected_directory=%s, media_title=%s, poster_url=%s",
+                         selected_directory, movie_title, poster_url)
         return "Bad Request: Missing form data", 400
 
     # Find the correct base folder for the selected directory
@@ -573,15 +573,15 @@ def confirm_directory():
         app.logger.info(f"Saved mapping for future: {content_type}_{tmdb_id} -> {save_dir}")
 
     # Save the logo and get the local path
-    local_logo_path = save_logo_and_thumbnail(logo_url, movie_title, save_dir)
-    if local_logo_path:
+    local_poster_path = save_poster_and_thumbnail(poster_url, movie_title, save_dir)
+    if local_poster_path:
         # Send Slack notification about successful download
-        message = f"Logo for '{movie_title}' has been downloaded!"
-        send_slack_notification(message, local_logo_path, logo_url)
-        app.logger.info(f"Logo successfully saved to {local_logo_path}")
+        message = f"Poster for '{movie_title}' has been downloaded!"
+        send_slack_notification(message, local_poster_path, poster_url)
+        app.logger.info(f"Poster successfully saved to {local_poster_path}")
     else:
-        app.logger.error(f"Failed to save logo for '{movie_title}'")
-        return "Failed to save logo", 500
+        app.logger.error(f"Failed to save poster for '{movie_title}'")
+        return "Failed to save poster", 500
 
     # Generate clean ID for navigation anchor
     anchor = generate_clean_id(movie_title)
@@ -594,18 +594,18 @@ def confirm_directory():
 
     return redirect(f"{redirect_url}#{anchor}")
 
-# Function to send Slack notifications about logo downloads
-def send_slack_notification(message, local_logo_path, logo_url):
+# Function to send Slack notifications about poster downloads
+def send_slack_notification(message, local_poster_path, poster_url):
     # Retrieve Slack webhook URL from environment variables
     slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
     if slack_webhook_url:
-        # Prepare Slack payload with message and logo details
+        # Prepare Slack payload with message and poster details
         payload = {
             "text": message,
             "attachments": [
                 {
-                    "text": f"Logo saved to: {local_logo_path}",
-                    "image_url": logo_url  # Display original TMDb logo in Slack
+                    "text": f"Poster saved to: {local_poster_path}",
+                    "image_url": poster_url  # Display original TMDb poster in Slack
                 }
             ]
         }
@@ -613,7 +613,7 @@ def send_slack_notification(message, local_logo_path, logo_url):
             # Send notification to Slack
             response = requests.post(slack_webhook_url, json=payload)
             if response.status_code == 200:
-                print(f"Slack notification sent successfully for '{local_logo_path}'")
+                print(f"Slack notification sent successfully for '{local_poster_path}'")
             else:
                 print(f"Failed to send Slack notification. Status code: {response.status_code}")
         except Exception as e:
