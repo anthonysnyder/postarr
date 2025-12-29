@@ -2,11 +2,27 @@ import os
 import requests
 import re
 import urllib.parse
+import time
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from difflib import get_close_matches, SequenceMatcher  # For string similarity
 from PIL import Image  # For image processing
 from datetime import datetime  # For handling dates and times
 from urllib.parse import unquote
+
+# SMB-safe directory listing helper
+def safe_listdir(path: str, retries: int = 8, base_delay: float = 0.05):
+    """
+    Safely list directory contents with retry logic for SMB mounts.
+    Degrades gracefully on BlockingIOError instead of raising 500 errors.
+    """
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            return os.listdir(path)
+        except BlockingIOError as e:
+            last_exc = e
+            time.sleep(base_delay * (2 ** attempt))
+    return []  # degrade gracefully, never 500
 
 # Initialize Flask application for managing movie and TV show posters
 app = Flask(__name__)
@@ -54,7 +70,7 @@ def get_poster_thumbnails(base_folders=None):
 
     # Iterate through specified base folders to find media with posters
     for base_folder in base_folders:
-        for media_dir in sorted(os.listdir(base_folder)):
+        for media_dir in sorted(safe_listdir(base_folder)):
             if media_dir.lower() in ["@eadir", "#recycle"]:  # Skip Synology NAS system folders (case-insensitive)
                 continue
 
@@ -329,7 +345,7 @@ def select_poster():
 
         # Search for an exact or closest matching directory
         for base_folder in base_folders:
-            directories = os.listdir(base_folder)
+            directories = safe_listdir(base_folder)
             possible_dirs.extend(directories)
 
             for directory in directories:
@@ -436,7 +452,7 @@ def confirm_directory():
     base_folders = movie_folders if content_type == 'movie' else tv_folders
 
     for base_folder in base_folders:
-        if selected_directory in os.listdir(base_folder):
+        if selected_directory in safe_listdir(base_folder):
             save_dir = os.path.join(base_folder, selected_directory)
             break
 
@@ -502,4 +518,9 @@ def refresh_page():
 # Main entry point for running the Flask application
 if __name__ == '__main__':
     # Start the app, listening on all network interfaces at port 5000
-    app.run(host='0.0.0.0', port=5000)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=False,
+        use_reloader=False,
+    )
