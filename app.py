@@ -2,11 +2,44 @@ import os
 import requests
 import re
 import urllib.parse
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+import time
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, send_file, Response
 from difflib import get_close_matches, SequenceMatcher  # For string similarity
 from PIL import Image  # For image processing
 from datetime import datetime  # For handling dates and times
 from urllib.parse import unquote
+
+# SMB-safe directory listing helper
+def safe_listdir(path: str, retries: int = 8, base_delay: float = 0.05):
+    """
+    Safely list directory contents with retry logic for SMB mounts.
+    Degrades gracefully on BlockingIOError instead of raising 500 errors.
+    """
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            return os.listdir(path)
+        except BlockingIOError as e:
+            last_exc = e
+            time.sleep(base_delay * (2 ** attempt))
+    return []  # degrade gracefully, never 500
+
+# SMB-safe file reading helper
+def safe_send_file(path: str, retries: int = 8, base_delay: float = 0.05, **kwargs):
+    """
+    Safely send a file with retry logic for SMB mounts.
+    Handles BlockingIOError by retrying with exponential backoff.
+    """
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            return send_file(path, **kwargs)
+        except BlockingIOError as e:
+            last_exc = e
+            if attempt < retries - 1:  # Don't sleep on the last attempt
+                time.sleep(base_delay * (2 ** attempt))
+    # If all retries fail, raise the last exception
+    raise last_exc
 
 # Initialize Flask application for managing movie and TV show posters
 app = Flask(__name__)
@@ -25,8 +58,17 @@ BASE_URL = "https://api.themoviedb.org/3"
 POSTER_BASE_URL = "https://image.tmdb.org/t/p/original"
 
 # Define base folders for organizing movies and TV shows
-movie_folders = ["/movies", "/kids-movies", "/movies2", "/kids-movies2"]
-tv_folders = ["/tv", "/kids-tv", "/tv2", "/kids-tv2"]  # Multiple folders for flexibility
+# Environment variables allow flexible folder configuration without code changes
+movie_folders_env = os.getenv('MOVIE_FOLDERS', '/movies,/kids-movies')
+tv_folders_env = os.getenv('TV_FOLDERS', '/tv,/kids-tv')
+
+# Parse comma-separated folder lists and filter out non-existent paths
+movie_folders = [folder.strip() for folder in movie_folders_env.split(',') if folder.strip() and os.path.exists(folder.strip())]
+tv_folders = [folder.strip() for folder in tv_folders_env.split(',') if folder.strip() and os.path.exists(folder.strip())]
+
+# Log the folders being used for verification
+app.logger.info(f"Movie folders: {movie_folders}")
+app.logger.info(f"TV folders: {tv_folders}")
 
 # Function to normalize movie/TV show titles for consistent searching and comparison
 def normalize_title(title):
@@ -54,7 +96,7 @@ def get_poster_thumbnails(base_folders=None):
 
     # Iterate through specified base folders to find media with posters
     for base_folder in base_folders:
-        for media_dir in sorted(os.listdir(base_folder)):
+        for media_dir in sorted(safe_listdir(base_folder)):
             if media_dir.lower() in ["@eadir", "#recycle"]:  # Skip Synology NAS system folders (case-insensitive)
                 continue
 
@@ -329,7 +371,7 @@ def select_poster():
 
         # Search for an exact or closest matching directory
         for base_folder in base_folders:
-            directories = os.listdir(base_folder)
+            directories = safe_listdir(base_folder)
             possible_dirs.extend(directories)
 
             for directory in directories:
@@ -397,8 +439,9 @@ def serve_poster(filename):
         if '@eaDir' in full_path:
             continue
         if os.path.exists(full_path):
-            # Serve the file from the appropriate directory
-            response = send_from_directory(base_folder, filename)
+            # Serve the file from the appropriate directory using safe_send_file
+            # to handle BlockingIOError on SMB mounts
+            response = safe_send_file(full_path)
             if refresh == 'true':
                 # If refresh is requested, set no-cache headers
                 response.cache_control.no_cache = True
@@ -436,7 +479,7 @@ def confirm_directory():
     base_folders = movie_folders if content_type == 'movie' else tv_folders
 
     for base_folder in base_folders:
-        if selected_directory in os.listdir(base_folder):
+        if selected_directory in safe_listdir(base_folder):
             save_dir = os.path.join(base_folder, selected_directory)
             break
 
@@ -502,4 +545,9 @@ def refresh_page():
 # Main entry point for running the Flask application
 if __name__ == '__main__':
     # Start the app, listening on all network interfaces at port 5000
-    app.run(host='0.0.0.0', port=5000)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=False,
+        use_reloader=False,
+    )
