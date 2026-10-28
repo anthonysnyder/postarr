@@ -8,6 +8,7 @@ from difflib import get_close_matches, SequenceMatcher  # For string similarity
 from PIL import Image  # For image processing
 from datetime import datetime  # For handling dates and times
 from urllib.parse import unquote
+from werkzeug.security import safe_join
 
 # SMB-safe directory listing helper
 def safe_listdir(path: str, retries: int = 8, base_delay: float = 0.05):
@@ -434,11 +435,17 @@ def serve_poster(filename):
     # Check if a "refresh" flag is present in the URL query parameters
     refresh = request.args.get('refresh', 'false')
     for base_folder in base_folders:
-        full_path = os.path.join(base_folder, filename)
+        # safe_join returns None if filename escapes base_folder (e.g. "../")
+        full_path = safe_join(base_folder, filename)
+        if full_path is None:
+            continue
+        # Only serve poster images, never arbitrary files
+        if not os.path.basename(full_path).lower().endswith(('.jpg', '.jpeg', '.png')):
+            continue
         # Skip Synology NAS special directories
         if '@eaDir' in full_path:
             continue
-        if os.path.exists(full_path):
+        if os.path.isfile(full_path):
             # Serve the file from the appropriate directory using safe_send_file
             # to handle BlockingIOError on SMB mounts
             response = safe_send_file(full_path)
